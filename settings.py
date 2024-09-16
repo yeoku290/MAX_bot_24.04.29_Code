@@ -395,6 +395,10 @@ class QuestionHandler(tornado.web.RequestHandler):
         global txt_question
         txt_question.insert("1.0", "")
 
+class HomepageHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("www/settings.html")
+
 class VersionHandler(tornado.web.RequestHandler):
     def get(self):
         self.write({"version":self.application.version})
@@ -594,6 +598,7 @@ async def main_server():
         pass
 
     app = Application([
+        ("/", HomepageHandler),
         ("/version", VersionHandler),
         ("/shutdown", ShutdownHandler),
         ("/sendkey", SendkeyHandler),
@@ -620,7 +625,7 @@ async def main_server():
     app.listen(CONST_SERVER_PORT)
     print("server running on port:", CONST_SERVER_PORT)
 
-    url="http://127.0.0.1:" + str(CONST_SERVER_PORT) + "/settings.html"
+    url="http://127.0.0.1:" + str(CONST_SERVER_PORT) + "/"
     print("goto url:", url)
     webbrowser.open_new(url)
     await asyncio.Event().wait()
