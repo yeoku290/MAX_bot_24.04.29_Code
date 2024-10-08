@@ -175,20 +175,6 @@ storage.get('settings', function(items) {
     }
 });
 
-function get_remote_url(settings) {
-    let remote_url_string = "";
-    if (settings) {
-        let remote_url_array = [];
-        if (settings.advanced.remote_url.length > 0) {
-            remote_url_array = JSON.parse('[' + settings.advanced.remote_url + ']');
-        }
-        if (remote_url_array.length) {
-            remote_url_string = remote_url_array[0];
-        }
-    }
-    return remote_url_string;
-}
-
 function start_ibon_ocr() {
     // ocr
     if (settings.ocr_captcha.enable) {

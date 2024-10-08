@@ -1,7 +1,3 @@
-$("#eventLargeCoverUrl").remove();
-$("#s_footer").remove();
-$("footer").remove();
-
 function dom_ready() {
   let eventId = getUrlParameter('event');
   //let selectedPerfId = 71202;

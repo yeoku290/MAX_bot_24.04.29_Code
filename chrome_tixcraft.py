@@ -44,7 +44,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.24)"
+CONST_APP_VERSION = "MaxBot (2024.04.25)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -115,7 +115,7 @@ CONST_WEBDRIVER_TYPE_UC = "undetected_chromedriver"
 CONST_WEBDRIVER_TYPE_DP = "DrissionPage"
 CONST_WEBDRIVER_TYPE_NODRIVER = "nodriver"
 CONST_CHROME_FAMILY = ["chrome","edge","brave"]
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
 CONST_PREFS_DICT = {
     "credentials_enable_service": False, 
     "in_product_help.snoozed_feature.IPH_LiveCaption.is_dismissed": True,
@@ -10901,7 +10901,7 @@ def sendkey_to_browser_exist(driver, tmp_filepath):
                         if not inputed_value_1 == target_text:
                             form_input_1.clear()
                             form_input_1.click()
-                            form_input_1.send_keys(cmd_dict["text"])
+                            form_input_1.send_keys(target_text)
                     except Exception as exc:
                         all_command_done = False
                         print("error on sendkey")

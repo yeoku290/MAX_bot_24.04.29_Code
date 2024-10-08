@@ -32,7 +32,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.24)"
+CONST_APP_VERSION = "MaxBot (2024.04.25)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -98,7 +98,7 @@ CONST_OCR_CAPTCH_IMAGE_SOURCE_CANVAS = "canvas"
 
 CONST_WEBDRIVER_TYPE_NODRIVER = "nodriver"
 CONST_CHROME_FAMILY = ["chrome","edge","brave"]
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
 
 warnings.simplefilter('ignore',InsecureRequestWarning)
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -2167,8 +2167,85 @@ async def check_refresh_datetime_occur(tab, target_time):
 
     return is_refresh_datetime_sent
 
+async def sendkey_to_browser(tab, config_dict):
+    tmp_filepath = ""
+    if "token" in config_dict:
+        app_root = util.get_app_root()
+        tmp_file = config_dict["token"] + ".tmp"
+        tmp_filepath = os.path.join(app_root, tmp_file)
+
+    if os.path.exists(tmp_filepath):
+        await sendkey_to_browser_exist(tab, tmp_filepath)
+
+async def sendkey_to_browser_exist(tab, tmp_filepath):
+    sendkey_dict = None
+    try:
+        with open(tmp_filepath) as json_data:
+            sendkey_dict = json.load(json_data)
+            print(sendkey_dict)
+    except Exception as e:
+        print("error on open file")
+        print(e)
+        pass
+
+    if sendkey_dict:
+        all_command_done = True
+        if "command" in sendkey_dict:
+            for cmd_dict in sendkey_dict["command"]:
+                #print("cmd_dict", cmd_dict)
+                if cmd_dict["type"] == "sendkey":
+                    print("sendkey")
+                    target_text = cmd_dict["text"]
+                    try:
+                        element = await tab.query_selector(cmd_dict["selector"])
+                        if element:
+                            await element.click()
+                            await element.apply('function (element) {element.value = ""; } ')
+                            await element.send_keys(target_text);
+                        else:
+                            #print("element not found:", select_query)
+                            pass
+
+                        form_input_1 = tab.find_element(By.CSS_SELECTOR, cmd_dict["selector"])
+                        inputed_value_1 = form_input_1.get_attribute('value')
+                        if not inputed_value_1 == target_text:
+                            form_input_1.clear()
+                            form_input_1.click()
+                            form_input_1.send_keys(cmd_dict["text"])
+                    except Exception as e:
+                        all_command_done = False
+                        #print("click fail for selector:", select_query)
+                        print(e)
+                        pass
+                
+                if cmd_dict["type"] == "click":
+                    print("click")
+
+                    try:
+                        element = await tab.query_selector(cmd_dict["selector"])
+                        if element:
+                            await element.click()
+                        else:
+                            #print("element not found:", select_query)
+                            pass
+                    except Exception as e:
+                        all_command_done = False
+                        #print("click fail for selector:", select_query)
+                        print(e)
+                        pass
+
+                time.sleep(0.05)
+
+        # must all command success to delete tmp file.
+        if all_command_done:
+            try:
+                os.unlink(tmp_filepath)
+            except Exception as e:
+                pass
+
 async def main(args):
     config_dict = get_config_dict(args)
+    config_dict["token"] = util.get_token()
 
     driver = None
     tab = None
@@ -2268,6 +2345,8 @@ async def main(args):
             # sleep more when paused.
             time.sleep(0.1)
             continue
+
+        await sendkey_to_browser(tab, config_dict)
 
         # for kktix.cc and kktix.com
         if 'kktix.c' in url:
