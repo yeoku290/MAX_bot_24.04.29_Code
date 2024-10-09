@@ -2205,13 +2205,6 @@ async def sendkey_to_browser_exist(tab, tmp_filepath):
                         else:
                             #print("element not found:", select_query)
                             pass
-
-                        form_input_1 = tab.find_element(By.CSS_SELECTOR, cmd_dict["selector"])
-                        inputed_value_1 = form_input_1.get_attribute('value')
-                        if not inputed_value_1 == target_text:
-                            form_input_1.clear()
-                            form_input_1.click()
-                            form_input_1.send_keys(cmd_dict["text"])
                     except Exception as e:
                         all_command_done = False
                         #print("click fail for selector:", select_query)
