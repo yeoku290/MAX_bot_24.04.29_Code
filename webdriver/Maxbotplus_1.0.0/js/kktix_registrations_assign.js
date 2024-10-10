@@ -1,5 +1,5 @@
+// PS: this script is not activated NOW, due to detected.
 var myInterval = null;
-
 function kktix_verification_conditions(settings)
 {
     let is_text_sent = false;
@@ -105,11 +105,14 @@ function kktix_area_keyword(settings)
                 if(auto_click_next_btn) {
                     let $next_btn = $('div.register-new-next-button-area > button');
                     if($next_btn) {
+                        let selector = 'div.register-new-next-button-area > button';
                         if($next_btn.length>1) {
-                            $next_btn.last().click();
+                            selector = 'div.register-new-next-button-area > button:last-child'
+                            //$next_btn.last().click();
                         } else {
-                            $next_btn.click();
+                            //$next_btn.click();
                         }
+                        //webdriver_click(selector);
                         hide_other_row = true;
                     }
                 }

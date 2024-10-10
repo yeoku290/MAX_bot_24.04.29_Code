@@ -2984,7 +2984,9 @@ def kktix_reg_new_main(driver, config_dict, fail_list, played_sound_ticket):
                                 pass
 
                     if len(control_text) == 0:
-                        click_ret = kktix_press_next_button(driver)
+                        if config_dict["kktix"]["auto_press_next_step_button"]:
+                            click_ret = kktix_press_next_button(driver)
+                            pass
                     else:
                         # input by maxbox plus extension.
                         is_fill_at_webdriver = False

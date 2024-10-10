@@ -804,7 +804,8 @@ async def nodriver_kktix_reg_new_main(tab, config_dict, fail_list, played_sound_
                                 pass
 
                     if len(control_text) == 0:
-                        click_ret = await nodriver_kktix_press_next_button(tab)
+                        if config_dict["kktix"]["auto_press_next_step_button"]:
+                            click_ret = await nodriver_kktix_press_next_button(tab)
                     else:
                         # input by maxbox plus extension.
                         is_fill_at_webdriver = False
