@@ -92,6 +92,31 @@ async function webdriver_sendkey(selector, answer) {
     }
 }
 
+async function webdriver_location_sendkey(selector, answer, location) {
+    let api_url = get_remote_url(settings);
+    //console.log("api_url:" + api_url);
+    if(api_url.indexOf("127.0.0.")>-1) {
+        let body = {
+            token: settings.token,
+            command: [
+            {type: 'sendkey', selector: selector, text: answer, location: location}
+        ]};
+        body = JSON.stringify(body);
+
+        let bundle = {
+            action: 'post',
+            data: {
+                'url': api_url + 'sendkey',
+                'post_data': body,
+            }
+        };
+        let bundle_string = JSON.stringify(bundle);
+        //console.log(bundle);
+        const return_answer = await chrome.runtime.sendMessage(bundle);
+        //console.log(return_answer);
+    }
+}
+
 async function webdriver_click(selector) {
     let api_url = get_remote_url(settings);
     //console.log("api_url:" + api_url);
@@ -100,6 +125,31 @@ async function webdriver_click(selector) {
             token: settings.token,
             command: [
             {type: 'click', selector: selector}
+        ]};
+        body = JSON.stringify(body);
+
+        let bundle = {
+            action: 'post',
+            data: {
+                'url': api_url + 'sendkey',
+                'post_data': body,
+            }
+        };
+        let bundle_string = JSON.stringify(bundle);
+        //console.log(bundle);
+        const return_answer = await chrome.runtime.sendMessage(bundle);
+        //console.log(return_answer);
+    }
+}
+
+async function webdriver_location_click(selector, location) {
+    let api_url = get_remote_url(settings);
+    //console.log("api_url:" + api_url);
+    if(api_url.indexOf("127.0.0.")>-1) {
+        let body = {
+            token: settings.token,
+            command: [
+            {type: 'click', selector: selector, location: location}
         ]};
         body = JSON.stringify(body);
 

@@ -32,7 +32,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.25)"
+CONST_APP_VERSION = "MaxBot (2024.04.26)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -43,13 +43,11 @@ CONST_MAXBOT_QUESTION_FILE = "MAXBOT_QUESTION.txt"
 CONST_MAXBLOCK_EXTENSION_NAME = "Maxblockplus_1.0.0"
 CONST_MAXBLOCK_EXTENSION_FILTER =[
 "*.doubleclick.net/*",
-"*.googlesyndication.com/*",
 "*.ssp.hinet.net/*",
 "*a.amnet.tw/*",
 "*anymind360.com/*",
 "*adx.c.appier.net/*",
 "*cdn.cookielaw.org/*",
-"*cdnjs.cloudflare.com/ajax/libs/clipboard.js/*",
 "*clarity.ms/*",
 "*cloudfront.com/*",
 "*cms.analytics.yahoo.com/*",
@@ -1812,32 +1810,35 @@ async def nodriver_cityline_purchase_button_press(tab, config_dict):
     is_button_clicked = False
     if is_date_assign_by_bot:
         print("press purchase button")
-        await nodriver_press_button(tab, 'button.purchase-btn')
+        await nodriver_press_button(tab, 'div.ticketCard > button.purchase-btn')
         is_button_clicked = True
         # wait reCAPTCHA popup.
         time.sleep(6)
 
     return is_button_clicked
 
-async def nodriver_cityline_close_second_tab(tab, url):
-    new_tab = tab
-    #print("tab count:", len(tab.browser.tabs))
-    if len(tab.browser.tabs) > 1:
+async def nodriver_cityline_close_tab(driver):
+    tmp_tab = driver.tabs[0]
+    try:
+        html = await tmp_tab.get_content()
+        #print("get_content:", html)
+        if len(html) > 0:
+            await tmp_tab.activate()
+            await tmp_tab.close()
+    except Exception as exc:
+        pass                        
+
+async def nodriver_cityline_close_second_tab(driver, current_tab, url):
+    tab_count = len(driver.tabs)
+    #print("close_second_tab tab count:", tab_count)
+    if tab_count > 1:
         # wait page ready.
         time.sleep(0.3)
-        for tmp_tab in tab.browser.tabs:
-            if tmp_tab != tab:
-                tmp_url, is_quit_bot = await nodriver_current_url(tmp_tab)
-                if len(tmp_url) > 0:
-                    if tmp_url[:5] == "https":
-                        await new_tab.activate()
-                        await tab.close()
-                        time.sleep(0.3)
-                        new_tab = tmp_tab
-                        break
-    return new_tab
+        await nodriver_cityline_close_tab(driver)
+        time.sleep(0.3)
+    return current_tab
 
-async def nodriver_cityline_main(tab, url, config_dict):
+async def nodriver_cityline_main(driver, tab, url, config_dict):
     global cityline_dict
     if not 'cityline_dict' in globals():
         cityline_dict = {}
@@ -1861,7 +1862,7 @@ async def nodriver_cityline_main(tab, url, config_dict):
         if len(cityline_account) > 4:
             await nodriver_cityline_login(tab, cityline_account)
 
-    tab = await nodriver_cityline_close_second_tab(tab, url)
+    tab = await nodriver_cityline_close_second_tab(driver, tab, url)
 
     # date page.
     #https://venue.cityline.com/utsvInternet/EVENT_NAME/eventDetail?event=EVENT_CODE
@@ -1906,21 +1907,12 @@ async def nodriver_facebook_main(tab, config_dict):
 def get_nodriver_browser_args():
     browser_args = [
         "--user-agent=%s" % (USER_AGENT),
-        "--disable-2d-canvas-clip-aa",
-        "--disable-3d-apis",
         "--disable-animations",
         "--disable-app-info-dialog-mac",
         "--disable-background-networking",
         "--disable-backgrounding-occluded-windows",
-        "--disable-bookmark-reordering",
-        "--disable-boot-animation",
         "--disable-breakpad",
-        "--disable-canvas-aa",
-        "--disable-client-side-phishing-detection",
-        "--disable-cloud-import",
-        "--disable-component-cloud-policy",
         "--disable-component-update",
-        "--disable-composited-antialiasing",
         "--disable-default-apps",
         "--disable-dev-shm-usage",
         "--disable-device-discovery-notifications",
@@ -1932,7 +1924,6 @@ def get_nodriver_browser_args():
         "--disable-login-animations",
         "--disable-login-screen-apps",
         "--disable-notifications",
-        "--disable-office-editing-component-extension",
         "--disable-password-generation",
         "--disable-popup-blocking",
         "--disable-renderer-backgrounding",
@@ -1946,13 +1937,13 @@ def get_nodriver_browser_args():
         "--no-default-browser-check",
         "--no-first-run",
         "--no-pings",
-        "--no-sandbox"
         "--no-service-autorun",
         "--password-store=basic",
-        "--remote-allow-origins=*",
+        "--remote-debugging-host=127.0.0.1",
         "--lang=zh-TW",
         #"--disable-remote-fonts",
     ]
+
     return browser_args
 
 def get_maxbot_extension_path(extension_folder):
@@ -1984,23 +1975,21 @@ def get_extension_config(config_dict):
         if len(ext) > 0:
             conf.add_extension(ext)
             util.dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE)
-        ext = get_maxbot_extension_path(CONST_MAXBLOCK_EXTENSION_NAME)
-        if len(ext) > 0:
-            conf.add_extension(ext)
-            util.dump_settings_to_maxblock_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE, CONST_MAXBLOCK_EXTENSION_FILTER)
+        #ext = get_maxbot_extension_path(CONST_MAXBLOCK_EXTENSION_NAME)
+        #if len(ext) > 0:
+        #    conf.add_extension(ext)
+        #    util.dump_settings_to_maxblock_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE, CONST_MAXBLOCK_EXTENSION_FILTER)
     return conf
 
 async def nodrver_block_urls(tab, config_dict):
     NETWORK_BLOCKED_URLS = [
         '*.clarity.ms/*',
-        '*.cloudfront.com/*',
         '*.doubleclick.net/*',
         '*.lndata.com/*',
         '*.rollbar.com/*',
         '*.twitter.com/i/*',
         '*/adblock.js',
         '*/google_ad_block.js',
-        '*cityline.com/js/others.min.js',
         '*anymind360.com/*',
         '*cdn.cookielaw.org/*',
         '*e2elog.fetnet.net*',
@@ -2042,9 +2031,9 @@ async def nodrver_block_urls(tab, config_dict):
         NETWORK_BLOCKED_URLS.append('*facebook.com/*')
         NETWORK_BLOCKED_URLS.append('*.fbcdn.net/*')
 
-    await tab.send(cdp.network.enable())
+    #await tab.send(cdp.network.enable())
     # set_blocked_ur_ls is author's typo..., waiting author to chagne.
-    await tab.send(cdp.network.set_blocked_ur_ls(NETWORK_BLOCKED_URLS))
+    #await tab.send(cdp.network.set_blocked_ur_ls(NETWORK_BLOCKED_URLS))
     return tab
 
 async def nodriver_resize_window(tab, config_dict):
@@ -2058,7 +2047,7 @@ async def nodriver_resize_window(tab, config_dict):
             if tab:
                 await tab.set_window_size(left=position_left, top=30, width=int(size_array[0]), height=int(size_array[1]))
 
-async def nodriver_current_url(tab):
+async def nodriver_current_url(driver, tab):
     is_quit_bot = False
     exit_bot_error_strings = [
         "server rejected WebSocket connection: HTTP 500",
@@ -2067,6 +2056,20 @@ async def nodriver_current_url(tab):
     ]
 
     url = ""
+    tab_count = len(driver.tabs)
+    #print("tab_count:", tab_count)
+
+    # PS: manually close tab will cause nodriver no response.
+    if tab_count > 1:
+        print("switch to last tab")
+        tab = driver.tabs[tab_count-1]
+
+    reset_active_tab = None
+    if not tab in driver.tabs:
+        print("tab closed by user before.")
+        tab = driver.tabs[tab_count-1]
+        reset_active_tab = tab
+
     if tab:
         url_dict = {}
         try:
@@ -2091,7 +2094,7 @@ async def nodriver_current_url(tab):
                     if "0" in url_dict[k]:
                         url_array.append(url_dict[k]["0"])
             url = ''.join(url_array)
-    return url, is_quit_bot
+    return url, is_quit_bot, reset_active_tab
 
 def nodriver_overwrite_prefs(conf):
     #print(conf.user_data_dir)
@@ -2153,22 +2156,24 @@ def nodriver_overwrite_prefs(conf):
     with open(state_filepath, 'w') as outfile:
         outfile.write(json_str)
 
-async def check_refresh_datetime_occur(tab, target_time):
+async def check_refresh_datetime_occur(driver, target_time):
     is_refresh_datetime_sent = False
 
     system_clock_data = datetime.now()
     current_time = system_clock_data.strftime('%H:%M:%S')
     if target_time == current_time:
         try:
-            await tab.reload()
-            is_refresh_datetime_sent = True
-            print("send refresh at time:", current_time)
+            for tab in driver.tabs:
+                await tab.reload()
+                is_refresh_datetime_sent = True
+                print("send refresh at time:", current_time)
         except Exception as exc:
+            print(exc)
             pass
 
     return is_refresh_datetime_sent
 
-async def sendkey_to_browser(tab, config_dict):
+async def sendkey_to_browser(driver, config_dict, url):
     tmp_filepath = ""
     if "token" in config_dict:
         app_root = util.get_app_root()
@@ -2176,24 +2181,38 @@ async def sendkey_to_browser(tab, config_dict):
         tmp_filepath = os.path.join(app_root, tmp_file)
 
     if os.path.exists(tmp_filepath):
-        await sendkey_to_browser_exist(tab, tmp_filepath)
+        sendkey_dict = None
+        try:
+            with open(tmp_filepath) as json_data:
+                sendkey_dict = json.load(json_data)
+                print(sendkey_dict)
+        except Exception as e:
+            print("error on open file")
+            print(e)
+            pass
 
-async def sendkey_to_browser_exist(tab, tmp_filepath):
-    sendkey_dict = None
-    try:
-        with open(tmp_filepath) as json_data:
-            sendkey_dict = json.load(json_data)
-            print(sendkey_dict)
-    except Exception as e:
-        print("error on open file")
-        print(e)
-        pass
+        if sendkey_dict:
+            for each_tab in driver.tabs:
+                all_command_done = await sendkey_to_browser_exist(each_tab, sendkey_dict, url)
+                
+                # must all command success to delete tmp file.
+                if all_command_done:
+                    try:
+                        os.unlink(tmp_filepath)
+                    except Exception as e:
+                        pass
 
-    if sendkey_dict:
-        all_command_done = True
-        if "command" in sendkey_dict:
-            for cmd_dict in sendkey_dict["command"]:
-                #print("cmd_dict", cmd_dict)
+async def sendkey_to_browser_exist(tab, sendkey_dict, url):
+    all_command_done = True
+    if "command" in sendkey_dict:
+        for cmd_dict in sendkey_dict["command"]:
+            #print("cmd_dict", cmd_dict)
+            matched_location = True
+            if "location" in cmd_dict:
+                if cmd_dict["location"] != url:
+                    matched_location = False
+
+            if matched_location:
                 if cmd_dict["type"] == "sendkey":
                     print("sendkey")
                     target_text = cmd_dict["text"]
@@ -2214,7 +2233,6 @@ async def sendkey_to_browser_exist(tab, tmp_filepath):
                 
                 if cmd_dict["type"] == "click":
                     print("click")
-
                     try:
                         element = await tab.query_selector(cmd_dict["selector"])
                         if element:
@@ -2227,15 +2245,9 @@ async def sendkey_to_browser_exist(tab, tmp_filepath):
                         #print("click fail for selector:", select_query)
                         print(e)
                         pass
+            time.sleep(0.05)
+    return all_command_done
 
-                time.sleep(0.05)
-
-        # must all command success to delete tmp file.
-        if all_command_done:
-            try:
-                os.unlink(tmp_filepath)
-            except Exception as e:
-                pass
 
 async def main(args):
     config_dict = get_config_dict(args)
@@ -2301,10 +2313,13 @@ async def main(args):
             break
 
         if not is_quit_bot:
-            url, is_quit_bot = await nodriver_current_url(tab)
-            #print("url:", url)
+            url, is_quit_bot, reset_act_tab = await nodriver_current_url(driver, tab)
+            if not reset_act_tab is None:
+                tab = reset_act_tab
+            #print("act_tab url:", url)
 
         if is_quit_bot:
+            print("start to quit bot...")
             try:
                 await driver.stop()
                 driver = None
@@ -2319,7 +2334,7 @@ async def main(args):
                 continue
 
         if not is_refresh_datetime_sent:
-            is_refresh_datetime_sent = await check_refresh_datetime_occur(tab, config_dict["refresh_datetime"])
+            is_refresh_datetime_sent = await check_refresh_datetime_occur(driver, config_dict["refresh_datetime"])
 
         is_maxbot_paused = False
         if os.path.exists(CONST_MAXBOT_INT28_FILE):
@@ -2340,7 +2355,7 @@ async def main(args):
             time.sleep(0.1)
             continue
 
-        await sendkey_to_browser(tab, config_dict)
+        await sendkey_to_browser(driver, config_dict, url)
 
         # for kktix.cc and kktix.com
         if 'kktix.c' in url:
@@ -2389,7 +2404,7 @@ async def main(args):
             pass
 
         if 'cityline.com' in url:
-            tab = await nodriver_cityline_main(tab, url, config_dict)
+            tab = await nodriver_cityline_main(driver, tab, url, config_dict)
 
         softix_family = False
         if 'hkticketing.com' in url:

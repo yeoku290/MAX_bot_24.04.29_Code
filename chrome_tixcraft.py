@@ -44,7 +44,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.25)"
+CONST_APP_VERSION = "MaxBot (2024.04.26)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -55,12 +55,10 @@ CONST_MAXBOT_QUESTION_FILE = "MAXBOT_QUESTION.txt"
 CONST_MAXBLOCK_EXTENSION_NAME = "Maxblockplus_1.0.0"
 CONST_MAXBLOCK_EXTENSION_FILTER =[
 "*.doubleclick.net/*",
-"*.googlesyndication.com/*",
 "*.ssp.hinet.net/*",
 "*a.amnet.tw/*",
 "*adx.c.appier.net/*",
 "*cdn.cookielaw.org/*",
-"*cdnjs.cloudflare.com/ajax/libs/clipboard.js/*",
 "*clarity.ms/*",
 "*cloudfront.com/*",
 "*cms.analytics.yahoo.com/*",
@@ -717,14 +715,12 @@ def get_driver_by_config(config_dict):
         try:
             NETWORK_BLOCKED_URLS = [
                 '*.clarity.ms/*',
-                '*.cloudfront.com/*',
                 '*.doubleclick.net/*',
                 '*.lndata.com/*',
                 '*.rollbar.com/*',
                 '*.twitter.com/i/*',
                 '*/adblock.js',
                 '*/google_ad_block.js',
-                '*cityline.com/js/others.min.js',
                 '*anymind360.com/*',
                 '*cdn.cookielaw.org/*',
                 '*e2elog.fetnet.net*',
@@ -10868,7 +10864,7 @@ def check_refresh_datetime_occur(driver, target_time):
 
     return is_refresh_datetime_sent
 
-def sendkey_to_browser(driver, config_dict):
+def sendkey_to_browser(driver, config_dict, url):
     tmp_filepath = ""
     if "token" in config_dict:
         app_root = util.get_app_root()
@@ -10876,9 +10872,9 @@ def sendkey_to_browser(driver, config_dict):
         tmp_filepath = os.path.join(app_root, tmp_file)
 
     if os.path.exists(tmp_filepath):
-        sendkey_to_browser_exist(driver, tmp_filepath)
+        sendkey_to_browser_exist(driver, tmp_filepath, url)
 
-def sendkey_to_browser_exist(driver, tmp_filepath):
+def sendkey_to_browser_exist(driver, tmp_filepath, url):
     sendkey_dict = None
     try:
         with open(tmp_filepath) as json_data:
@@ -11012,7 +11008,7 @@ def main(args):
             time.sleep(0.1)
             continue
 
-        sendkey_to_browser(driver, config_dict)
+        sendkey_to_browser(driver, config_dict, url)
 
         # default is 0, not reset.
         if config_dict["advanced"]["reset_browser_interval"] > 0:
