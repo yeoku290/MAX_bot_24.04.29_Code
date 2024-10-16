@@ -112,7 +112,7 @@ function kktix_area_keyword(settings)
                         } else {
                             //$next_btn.click();
                         }
-                        //webdriver_click(selector);
+                        //webdriver_click(settings, selector);
                         hide_other_row = true;
                     }
                 }

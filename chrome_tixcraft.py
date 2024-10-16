@@ -44,7 +44,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.26)"
+CONST_APP_VERSION = "MaxBot (2024.04.27)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -11076,7 +11076,7 @@ def main(args):
 
 def cli():
     parser = argparse.ArgumentParser(
-            description="MaxBot Aggument Parser")
+            description="MaxBot Argument Parser")
 
     parser.add_argument("--input",
         help="config file path",

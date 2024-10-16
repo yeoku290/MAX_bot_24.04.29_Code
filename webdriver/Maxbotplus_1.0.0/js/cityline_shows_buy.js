@@ -8,7 +8,7 @@ function cityline_shows_buy()
         //console.log("clicking");
         if (settings.webdriver_type == "nodriver") {
             const selector="#buyTicketBtn";
-            webdriver_location_click(selector, window.location.href);
+            webdriver_location_click(settings, selector, window.location.href);
         }
     }
 }

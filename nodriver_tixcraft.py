@@ -32,7 +32,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.26)"
+CONST_APP_VERSION = "MaxBot (2024.04.27)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -2043,8 +2043,14 @@ async def nodriver_resize_window(tab, config_dict):
                 position_left = int(size_array[0]) * int(size_array[2])
             #tab = await driver.main_tab()
             if tab:
-                await tab.set_window_size(left=position_left, top=30, width=int(size_array[0]), height=int(size_array[1]))
+                try:
+                    await tab.set_window_size(left=position_left, top=30, width=int(size_array[0]), height=int(size_array[1]))
+                except Exception as exc:
+                    print(exc)
+                    print("請關閉所有視窗後，重新操作一次")
+                    pass
 
+# we only handle last tab.
 async def nodriver_current_url(driver, tab):
     is_quit_bot = False
     exit_bot_error_strings = [
@@ -2059,7 +2065,6 @@ async def nodriver_current_url(driver, tab):
 
     # PS: manually close tab will cause nodriver no response.
     if tab_count > 1:
-        print("switch to last tab")
         tab = driver.tabs[tab_count-1]
 
     reset_active_tab = None
@@ -2190,6 +2195,7 @@ async def sendkey_to_browser(driver, config_dict, url):
             pass
 
         if sendkey_dict:
+            #print("nodriver start to sendkey")
             for each_tab in driver.tabs:
                 all_command_done = await sendkey_to_browser_exist(each_tab, sendkey_dict, url)
                 
@@ -2197,6 +2203,7 @@ async def sendkey_to_browser(driver, config_dict, url):
                 if all_command_done:
                     try:
                         os.unlink(tmp_filepath)
+                        #print("remove file:", tmp_filepath)
                     except Exception as e:
                         pass
 
@@ -2298,7 +2305,6 @@ async def main(args):
         print(exc)
         pass
 
-    maxbot_last_reset_time = time.time()
     is_quit_bot = False
     is_refresh_datetime_sent = False
 
@@ -2422,7 +2428,7 @@ async def main(args):
 
 def cli():
     parser = argparse.ArgumentParser(
-            description="MaxBot Aggument Parser")
+            description="MaxBot Argument Parser")
 
     parser.add_argument("--input",
         help="config file path",

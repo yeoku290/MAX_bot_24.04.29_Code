@@ -67,7 +67,7 @@ function get_remote_url(settings) {
     return remote_url_string;
 }
 
-async function webdriver_sendkey(selector, answer) {
+async function webdriver_sendkey(settings, selector, answer) {
     let api_url = get_remote_url(settings);
     //console.log("api_url:" + api_url);
     if(api_url.indexOf("127.0.0.")>-1) {
@@ -92,7 +92,7 @@ async function webdriver_sendkey(selector, answer) {
     }
 }
 
-async function webdriver_location_sendkey(selector, answer, location) {
+async function webdriver_location_sendkey(settings, selector, answer, location) {
     let api_url = get_remote_url(settings);
     //console.log("api_url:" + api_url);
     if(api_url.indexOf("127.0.0.")>-1) {
@@ -117,7 +117,7 @@ async function webdriver_location_sendkey(selector, answer, location) {
     }
 }
 
-async function webdriver_click(selector) {
+async function webdriver_click(settings, selector) {
     let api_url = get_remote_url(settings);
     //console.log("api_url:" + api_url);
     if(api_url.indexOf("127.0.0.")>-1) {
@@ -142,7 +142,7 @@ async function webdriver_click(selector) {
     }
 }
 
-async function webdriver_location_click(selector, location) {
+async function webdriver_location_click(settings, selector, location) {
     let api_url = get_remote_url(settings);
     //console.log("api_url:" + api_url);
     if(api_url.indexOf("127.0.0.")>-1) {

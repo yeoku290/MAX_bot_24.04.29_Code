@@ -127,7 +127,7 @@ function cityline_performance() {
                 //$('#expressPurchaseBtn').trigger( "click");
                 if (settings.webdriver_type == "nodriver") {
                     const selector="#expressPurchaseBtn";
-                    webdriver_location_click(selector, window.location.href);
+                    webdriver_location_click(settings, selector, window.location.href);
                 }
             }
         }
