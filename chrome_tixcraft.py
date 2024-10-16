@@ -113,7 +113,6 @@ CONST_WEBDRIVER_TYPE_UC = "undetected_chromedriver"
 CONST_WEBDRIVER_TYPE_DP = "DrissionPage"
 CONST_WEBDRIVER_TYPE_NODRIVER = "nodriver"
 CONST_CHROME_FAMILY = ["chrome","edge","brave"]
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
 CONST_PREFS_DICT = {
     "credentials_enable_service": False, 
     "in_product_help.snoozed_feature.IPH_LiveCaption.is_dismissed": True,
@@ -251,7 +250,6 @@ def get_chrome_options(webdriver_path, config_dict):
         #chrome_options.add_argument('--headless')
         chrome_options.add_argument('--headless=new')
 
-    chrome_options.add_argument("--user-agent=%s" % (USER_AGENT))
     chrome_options.add_argument("--disable-animations")
     chrome_options.add_argument("--disable-background-networking")
     chrome_options.add_argument("--disable-backgrounding-occluded-windows")
@@ -410,7 +408,6 @@ def get_uc_options(uc, config_dict, webdriver_path):
         #options.add_argument('--headless')
         options.add_argument('--headless=new')
 
-    options.add_argument("--user-agent=%s" % (USER_AGENT))
     options.add_argument("--disable-animations")
     options.add_argument("--disable-background-networking")
     options.add_argument("--disable-backgrounding-occluded-windows")

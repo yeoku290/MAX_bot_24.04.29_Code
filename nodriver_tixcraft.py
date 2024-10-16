@@ -96,7 +96,6 @@ CONST_OCR_CAPTCH_IMAGE_SOURCE_CANVAS = "canvas"
 
 CONST_WEBDRIVER_TYPE_NODRIVER = "nodriver"
 CONST_CHROME_FAMILY = ["chrome","edge","brave"]
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
 
 warnings.simplefilter('ignore',InsecureRequestWarning)
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -1906,7 +1905,6 @@ async def nodriver_facebook_main(tab, config_dict):
 
 def get_nodriver_browser_args():
     browser_args = [
-        "--user-agent=%s" % (USER_AGENT),
         "--disable-animations",
         "--disable-app-info-dialog-mac",
         "--disable-background-networking",
