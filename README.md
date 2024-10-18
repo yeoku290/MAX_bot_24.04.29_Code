@@ -110,7 +110,7 @@ cd tixcraft_bot
 ```bash
 python3 -m pip install -r requirement.txt
 ```
-說明：Windows 系統要用 python 指令，不是 python3, macOS 由於可能有多個 python 環境，所以才是使用 python3 指令。
+說明：Windows 作業系統要用 python 指令，不是 python3, macOS / Linux 作業系統由於可能有多個 python 版本的環境，所以才是使用 python3 指令。
 
 ### Step 4: 執行設定介面主桯式:
 
