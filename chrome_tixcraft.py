@@ -10865,7 +10865,7 @@ def sendkey_to_browser(driver, config_dict, url):
     tmp_filepath = ""
     if "token" in config_dict:
         app_root = util.get_app_root()
-        tmp_file = config_dict["token"] + ".tmp"
+        tmp_file = config_dict["token"] + "_sendkey.tmp"
         tmp_filepath = os.path.join(app_root, tmp_file)
 
     if os.path.exists(tmp_filepath):

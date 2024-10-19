@@ -385,8 +385,8 @@ def clean_tmp_file():
          util.force_remove_file(filepath)
 
     Root_Dir = util.get_app_root()
-    target_folder = os.listdir(Root_Dir)
-    for item in target_folder:
+    target_folder_list = os.listdir(Root_Dir)
+    for item in target_folder_list:
         if item.endswith(".tmp"):
             os.remove(os.path.join(Root_Dir, item))
 
@@ -513,8 +513,40 @@ class SendkeyHandler(tornado.web.RequestHandler):
         if is_pass_check:
             app_root = util.get_app_root()
             if "token" in _body:
-                tmp_file = _body["token"] + ".tmp"
+                tmp_file = _body["token"] + "_sendkey.tmp"
                 config_filepath = os.path.join(app_root, tmp_file)
+                util.save_json(_body, config_filepath)
+
+        self.write({"return": True})
+
+class EvalHandler(tornado.web.RequestHandler):
+    def post(self):
+        #print("SendkeyHandler")
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
+        _body = None
+        is_pass_check = True
+        errorMessage = ""
+        errorCode = 0
+
+        if is_pass_check:
+            is_pass_check = False
+            try :
+                _body = json.loads(self.request.body)
+                is_pass_check = True
+            except Exception:
+                errorMessage = "wrong json format"
+                errorCode = 1001
+                pass
+
+        if is_pass_check:
+            app_root = util.get_app_root()
+            if "token" in _body:
+                tmp_file = _body["token"] + "_eval.tmp"
+                config_filepath = os.path.join(app_root, tmp_file)
+                #print("tmp_file:", config_filepath)
                 util.save_json(_body, config_filepath)
 
         self.write({"return": True})
@@ -602,6 +634,7 @@ async def main_server():
         ("/version", VersionHandler),
         ("/shutdown", ShutdownHandler),
         ("/sendkey", SendkeyHandler),
+        ("/eval", EvalHandler),
 
         # status api
         ("/status", StatusHandler),
