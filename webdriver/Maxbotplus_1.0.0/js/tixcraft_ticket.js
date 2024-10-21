@@ -143,15 +143,17 @@ function get_ocr_image()
 var last_captcha_answer="";
 chrome.runtime.onMessage.addListener((message) => {
     //console.log('sent from background', message);
-    if(message.answer.length==4) {
-        tixcraft_set_ocr_answer(message.answer);
-        last_captcha_answer=message.answer;
-    } else {
-        // renew captcha.
-        if(last_captcha_answer!=message.answer) {
+    if(message.hasOwnProperty("answer")) {
+        if(message.answer.length==4) {
+            tixcraft_set_ocr_answer(message.answer);
             last_captcha_answer=message.answer;
-            console.log("renew captcha");
-            $('#TicketForm_verifyCode').click();
+        } else {
+            // renew captcha.
+            if(last_captcha_answer!=message.answer) {
+                last_captcha_answer=message.answer;
+                console.log("renew captcha");
+                $('#TicketForm_verifyCode').click();
+            }
         }
     }
 });

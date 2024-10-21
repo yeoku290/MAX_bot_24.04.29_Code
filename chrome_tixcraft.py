@@ -21,7 +21,6 @@ import webbrowser
 from datetime import datetime
 
 import chromedriver_autoinstaller_max
-import requests
 from selenium import webdriver
 from selenium.common.exceptions import (NoAlertPresentException,
                                         NoSuchWindowException,
