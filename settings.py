@@ -5,34 +5,20 @@ import base64
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import threading
 import time
 import webbrowser
 from datetime import datetime
+from typing import (Any, Awaitable, Callable, Dict, Generator, Iterable, List,
+                    Optional, Tuple, Type, TypeVar, Union, cast, overload)
 
 import tornado
-from tornado.web import Application
-from tornado.web import StaticFileHandler
+from tornado.web import Application, StaticFileHandler
 
 import util
-from typing import (
-    Dict,
-    Any,
-    Union,
-    Optional,
-    Awaitable,
-    Tuple,
-    List,
-    Callable,
-    Iterable,
-    Generator,
-    Type,
-    TypeVar,
-    cast,
-    overload,
-)
 
 try:
     import ddddocr
@@ -390,6 +376,17 @@ def clean_tmp_file():
         if item.endswith(".tmp"):
             os.remove(os.path.join(Root_Dir, item))
 
+    # clean generated ext.
+    webdriver_folder = os.path.join(Root_Dir, "webdriver")
+    target_folder_list = os.listdir(webdriver_folder)
+    for item in target_folder_list:
+        if item.startswith("tmp_"):
+            try:
+                shutil.rmtree(os.path.join(webdriver_folder, item))
+            except Exception as exc:
+                print(exc)
+                pass
+
 class QuestionHandler(tornado.web.RequestHandler):
     def get(self):
         global txt_question
@@ -669,7 +666,7 @@ def web_server():
     if not is_port_binded:
         asyncio.run(main_server())
     else:
-        print("port:", CONST_SERVER_PORT, " is in used.")
+        print("port:", CONST_SERVER_PORT, " is in used. 已有其他程式占用 web server 的連接埠.")
 
 def settgins_gui_timer():
     while True:

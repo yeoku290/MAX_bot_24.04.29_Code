@@ -8,11 +8,13 @@ import os
 import pathlib
 import platform
 import random
+import shutil
 import ssl
 import subprocess
 import sys
 import threading
 import time
+import urllib.parse
 import warnings
 import webbrowser
 from datetime import datetime
@@ -21,7 +23,6 @@ import nodriver as uc
 from nodriver import cdp
 from nodriver.core.config import Config
 from urllib3.exceptions import InsecureRequestWarning
-import urllib.parse
 
 import util
 from NonBrowser import NonBrowser
@@ -190,6 +191,7 @@ async def nodriver_press_button(tab, select_query):
 
 from typing import Optional
 
+
 async def nodriver_check_checkbox(tab: Optional[object], select_query: str, value: str = 'true') -> bool:
     if tab:
         try:
@@ -264,7 +266,7 @@ async def nodriver_goto_homepage(driver, config_dict):
             time.sleep(5)
         except Exception as e:
             pass
-        
+
 
         if len(config_dict["advanced"]["kktix_account"])>0:
             if not 'https://kktix.com/users/sign_in?' in homepage:
@@ -301,7 +303,30 @@ async def nodriver_goto_homepage(driver, config_dict):
     try:
         tab = await driver.get(homepage)
         await tab.get_content()
-        time.sleep(3)
+        # to avoid error: cannot unpack non-iterable NoneType object
+        time.sleep(2)
+
+        # workaround for not able resize.
+        url, is_quit_bot, reset_act_tab = await nodriver_current_url(driver, tab)
+        if len(driver.tabs) ==2 and url=="chrome://new-tab-page/":
+            print("retry...")
+
+            for i, tab in enumerate(driver):
+                if i == 0:
+                    print("close tab:", i)
+                    await tab.close()
+
+            #print("goto:", homepage)
+            tab = await driver.get(homepage)
+
+        # workaround for hidden chrome-extension tab.
+        if len(driver.tabs) ==2:
+            if url.startswith("chrome-extension://") and url.endswith("/audio.html"):
+                print("close wrong tab...")
+                for i, tab in enumerate(driver):
+                    if i > 0:
+                        print("close tab:", i)
+                        await tab.close()
     except Exception as e:
         pass
 
@@ -488,7 +513,7 @@ async def nodriver_kktix_travel_price_list(tab, config_dict, kktix_area_auto_sel
 
             if not row_input is None:
                 is_match_area = False
-                
+
                 # check ticket input textbox.
                 if len(current_ticket_number) > 0:
                     if current_ticket_number != "0":
@@ -995,7 +1020,7 @@ async def nodriver_get_text_by_selector(tab, my_css_selector, attribute='innerHT
         if div_element:
             #js_attr = await div_element.get_js_attributes()
             div_text = await div_element.get_html()
-            
+
             # only this case to remove tags
             if attribute=="innerText":
                 div_text = util.remove_html_tags(div_text)
@@ -1548,7 +1573,7 @@ async def nodriver_ibon_main(tab, url, config_dict, ocr, Captcha_Browser):
                 select_query = "tr.disbled"
                 # TODO:
                 #clean_tag_by_selector(driver,select_query)
-                
+
                 select_query = "tr.sold-out"
                 # TODO:
                 #clean_tag_by_selector(driver,select_query)
@@ -1598,7 +1623,7 @@ async def nodriver_ibon_main(tab, url, config_dict, ocr, Captcha_Browser):
                     is_ticket_number_assigned = False
                     # TODO:
                     #is_ticket_number_assigned = ibon_ticket_number_auto_select(driver, config_dict)
-                    
+
                     #print("is_ticket_number_assigned:", is_ticket_number_assigned)
                     if is_ticket_number_assigned:
                         if is_captcha_sent:
@@ -1825,7 +1850,7 @@ async def nodriver_cityline_close_tab(driver):
             await tmp_tab.activate()
             await tmp_tab.close()
     except Exception as exc:
-        pass                        
+        pass
 
 async def nodriver_cityline_close_second_tab(driver, current_tab, url):
     tab_count = len(driver.tabs)
@@ -1971,8 +1996,13 @@ def get_extension_config(config_dict):
     if config_dict["advanced"]["chrome_extension"]:
         ext = get_maxbot_extension_path(CONST_MAXBOT_EXTENSION_NAME)
         if len(ext) > 0:
-            conf.add_extension(ext)
-            util.dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE)
+            clone_ext = ext.replace(CONST_MAXBOT_EXTENSION_NAME, "tmp_" + CONST_MAXBOT_EXTENSION_NAME + "_" + config_dict["token"])
+            if not os.path.exists(clone_ext):
+                os.mkdir(clone_ext)
+            util.copytree(ext, clone_ext)
+
+            conf.add_extension(clone_ext)
+            util.dump_settings_to_maxbot_plus_extension(clone_ext, config_dict, CONST_MAXBOT_CONFIG_FILE)
         #ext = get_maxbot_extension_path(CONST_MAXBLOCK_EXTENSION_NAME)
         #if len(ext) > 0:
         #    conf.add_extension(ext)
@@ -2034,21 +2064,39 @@ async def nodrver_block_urls(tab, config_dict):
     #await tab.send(cdp.network.set_blocked_ur_ls(NETWORK_BLOCKED_URLS))
     return tab
 
-async def nodriver_resize_window(tab, config_dict):
-    if len(config_dict["advanced"]["window_size"]) > 0:
-        if "," in config_dict["advanced"]["window_size"]:
-            size_array = config_dict["advanced"]["window_size"].split(",")
-            position_left = 0
+async def nodriver_resize_window(driver, config_dict):
+    window_size = config_dict["advanced"]["window_size"]
+    if len(window_size) > 0:
+        #print("window_size", window_size)
+        if "," in window_size:
+            launch_counter = 1
+            target_left = 0
+            target_top = 30
+            target_width = 480
+            target_height = 1024
+            size_array = window_size.split(",")
+            if len(size_array) >= 2:
+                target_width = int(size_array[0])
+                target_height = int(size_array[1])
             if len(size_array) >= 3:
-                position_left = int(size_array[0]) * int(size_array[2])
+                if len(size_array[2]) > 0:
+                    launch_counter = int(size_array[2])
+                target_left = target_width * launch_counter
+                if target_left >= 1440:
+                    target_left = 0
             #tab = await driver.main_tab()
-            if tab:
-                try:
-                    await tab.set_window_size(left=position_left, top=30, width=int(size_array[0]), height=int(size_array[1]))
-                except Exception as exc:
-                    print(exc)
-                    print("請關閉所有視窗後，重新操作一次")
-                    pass
+            try:
+                for i, tab in enumerate(driver):
+                    #print(i, launch_counter, target_left, target_width, target_height)
+                    if i==0:
+                        await tab.activate()
+                    await tab.set_window_size(left=target_left, top=target_top, width=target_width, height=target_height)
+                    await tab.sleep()
+            except Exception as exc:
+                # cannot unpack non-iterable NoneType object
+                print(exc)
+                print("請關閉所有視窗後，重新操作一次")
+                pass
 
 # we only handle last tab.
 async def nodriver_current_url(driver, tab):
@@ -2105,7 +2153,7 @@ def nodriver_overwrite_prefs(conf):
     if not os.path.exists(prefs_filepath):
         os.mkdir(prefs_filepath)
     prefs_filepath = os.path.join(prefs_filepath,"Preferences")
-    
+
     prefs_dict = {
         "credentials_enable_service": False,
         "ack_existing_ntp_extensions": False,
@@ -2198,7 +2246,7 @@ async def sendkey_to_browser(driver, config_dict, url):
             #print("nodriver start to sendkey")
             for each_tab in driver.tabs:
                 all_command_done = await sendkey_to_browser_exist(each_tab, sendkey_dict, url)
-                
+
                 # must all command success to delete tmp file.
                 if all_command_done:
                     try:
@@ -2235,7 +2283,7 @@ async def sendkey_to_browser_exist(tab, sendkey_dict, url):
                         #print("click fail for selector:", select_query)
                         print(e)
                         pass
-                
+
                 if cmd_dict["type"] == "click":
                     print("click")
                     try:
@@ -2275,7 +2323,7 @@ async def eval_to_browser(driver, config_dict, url):
             #print("nodriver start to eval")
             for each_tab in driver.tabs:
                 all_command_done = await eval_to_browser_exist(each_tab, eval_dict, url)
-                
+
                 # must all command success to delete tmp file.
                 if all_command_done:
                     try:
@@ -2329,7 +2377,7 @@ async def main(args):
             tab = await nodriver_goto_homepage(driver, config_dict)
             tab = await nodrver_block_urls(tab, config_dict)
             if not config_dict["advanced"]["headless"]:
-                await nodriver_resize_window(tab, config_dict)
+                await nodriver_resize_window(driver, config_dict)
         else:
             print("無法使用nodriver，程式無法繼續工作")
             sys.exit()

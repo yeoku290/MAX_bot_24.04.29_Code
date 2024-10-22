@@ -5,21 +5,22 @@ import pathlib
 import platform
 import random
 import re
+import shutil
 import socket
 import subprocess
 import sys
 import threading
+import uuid
 from typing import Optional
 
 import requests
-import uuid
 
 CONST_FROM_TOP_TO_BOTTOM = "from top to bottom"
 CONST_FROM_BOTTOM_TO_TOP = "from bottom to top"
 CONST_CENTER = "center"
 CONST_RANDOM = "random"
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 
 def get_ip_address():
     gethostname = None
@@ -2066,3 +2067,12 @@ def launch_maxbot(script_name="chrome_tixcraft", filename="", homepage="", kktix
 
 def get_token():
     return str(uuid.uuid4().hex)
+
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)

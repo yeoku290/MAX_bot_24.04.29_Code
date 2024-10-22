@@ -389,12 +389,23 @@ def get_uc_options(uc, config_dict, webdriver_path):
     if config_dict["advanced"]["chrome_extension"]:
         extension_list = get_favoriate_extension_path(webdriver_path, config_dict)
     for ext in extension_list:
-        ext = ext.replace('.crx','')
+        if ext.endswith(".crx"):
+            ext = ext.replace('.crx','')
         if os.path.exists(ext):
             # sync config.
             if CONST_MAXBOT_EXTENSION_NAME in ext:
+                clone_ext = ext.replace(CONST_MAXBOT_EXTENSION_NAME, "tmp_" + CONST_MAXBOT_EXTENSION_NAME + "_" + config_dict["token"])
+                if not os.path.exists(clone_ext):
+                    os.mkdir(clone_ext)
+                util.copytree(ext, clone_ext)
+                ext = clone_ext
                 util.dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE)
             if CONST_MAXBLOCK_EXTENSION_NAME in ext:
+                clone_ext = ext.replace(CONST_MAXBOT_EXTENSION_NAME, "tmp_" + CONST_MAXBOT_CONFIG_FILE + "_" + config_dict["token"])
+                if not os.path.exists(clone_ext):
+                    os.mkdir(clone_ext)
+                util.copytree(ext, clone_ext)
+                ext = clone_ext
                 util.dump_settings_to_maxblock_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE, CONST_MAXBLOCK_EXTENSION_FILTER)
             load_extension_path += ("," + os.path.abspath(ext))
             #print("load_extension_path:", load_extension_path)
