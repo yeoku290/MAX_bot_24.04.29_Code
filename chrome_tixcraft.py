@@ -5959,14 +5959,13 @@ def tixcraft_main(driver, url, config_dict, ocr, Captcha_Browser):
                 pass
             break
 
-    # special case for same event re-open, redirect to user's homepage.
+    # for event soldout or abnormal, url should redirect to user's homepage.
     if 'https://tixcraft.com/' == url or 'https://tixcraft.com/activity' == url:
-        if "/ticket/area/" in config_dict["homepage"]:
-            if len(config_dict["homepage"].split('/'))==7:
-                try:
-                    driver.get(config_dict["homepage"])
-                except Exception as e:
-                    pass
+        if "/activity/game/" in config_dict["homepage"]:
+            try:
+                driver.get(config_dict["homepage"])
+            except Exception as e:
+                pass
 
     if "/activity/detail/" in url:
         tixcraft_dict["start_time"] = time.time()

@@ -1111,7 +1111,6 @@ async def nodriver_tixcraft_ticket_main(tab, config_dict, ocr, Captcha_Browser, 
         # checkbox javascrit code at chrome extension.
         await nodriver_tixcraft_ticket_main_agree(tab, config_dict)
 
-
 async def nodriver_tixcraft_main(tab, url, config_dict, ocr, Captcha_Browser):
     global tixcraft_dict
     if not 'tixcraft_dict' in globals():
@@ -1128,14 +1127,13 @@ async def nodriver_tixcraft_main(tab, url, config_dict, ocr, Captcha_Browser):
 
     await nodriver_tixcraft_home_close_window(tab)
 
-    # special case for same event re-open, redirect to user's homepage.
+    # for event soldout or abnormal, url should redirect to user's homepage.
     if 'https://tixcraft.com/' == url or 'https://tixcraft.com/activity' == url:
-        if "/ticket/area/" in config_dict["homepage"]:
-            if len(config_dict["homepage"].split('/'))==7:
-                try:
-                    await tab.get(config_dict["homepage"])
-                except Exception as e:
-                    pass
+        if "/activity/game/" in config_dict["homepage"]:
+            try:
+                await tab.get(config_dict["homepage"])
+            except Exception as e:
+                pass
 
     if "/activity/detail/" in url:
         tixcraft_dict["start_time"] = time.time()
