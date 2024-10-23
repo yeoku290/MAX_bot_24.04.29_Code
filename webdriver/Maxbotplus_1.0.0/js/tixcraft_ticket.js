@@ -163,6 +163,7 @@ function tixcraft_set_ocr_answer(answer)
     //console.log("answer:"+answer);
     if(answer.length > 0) {
         $('#TicketForm_verifyCode').val(answer);
+        checkall();
         $("button[type='submit']").click();
     }
 }
@@ -220,6 +221,10 @@ function get_remote_url(settings)
         }
     }
     return remote_url_string;
+}
+
+function checkall() {$('input[type=checkbox]:not(:checked)').each(function() {$(this).click();
+    });
 }
 
 storage.get('status', function (items)

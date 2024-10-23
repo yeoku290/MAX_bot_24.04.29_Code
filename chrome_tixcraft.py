@@ -363,9 +363,7 @@ def load_chromdriver_normal(config_dict, driver_type):
                     except WebDriverException as exc3:
                         print(exc3)
                         pass
-
     return driver
-
 
 def get_uc_options(uc, config_dict, webdriver_path):
     options = uc.ChromeOptions()
@@ -401,7 +399,7 @@ def get_uc_options(uc, config_dict, webdriver_path):
                 ext = clone_ext
                 util.dump_settings_to_maxbot_plus_extension(ext, config_dict, CONST_MAXBOT_CONFIG_FILE)
             if CONST_MAXBLOCK_EXTENSION_NAME in ext:
-                clone_ext = ext.replace(CONST_MAXBOT_EXTENSION_NAME, "tmp_" + CONST_MAXBOT_CONFIG_FILE + "_" + config_dict["token"])
+                clone_ext = ext.replace(CONST_MAXBLOCK_EXTENSION_NAME, "tmp_" + CONST_MAXBLOCK_EXTENSION_NAME + "_" + config_dict["token"])
                 if not os.path.exists(clone_ext):
                     os.mkdir(clone_ext)
                 util.copytree(ext, clone_ext)
