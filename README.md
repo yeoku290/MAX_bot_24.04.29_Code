@@ -16,7 +16,7 @@ MaxBot 的出發點是讓一般民眾與代購黃牛或懂得寫程式的人有�
 
 以下文章出現的「搶票」指的是「非台灣的藝文活動或車票」。
 
-全世界是什麼樣的一個標準？搶票程式只有在台灣會被處罰嗎？
+搶票程式在其他民主國家有什麼樣的標準？搶票程式只有在台灣會被處罰嗎？
 
 MaxBot is a FREE and open source bot program. Good luck getting your expected food or bus seat.
 
