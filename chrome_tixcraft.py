@@ -829,7 +829,8 @@ def get_driver_by_config(config_dict):
                 tixcraft_sid = config_dict["advanced"]["tixcraft_sid"]
                 if len(tixcraft_sid) > 1:
                     driver.delete_cookie("SID")
-                    driver.add_cookie({"name":"SID", "value": tixcraft_sid, "path" : "/", "secure":True})
+                    domain_name = homepage.split('/')[2]
+                    driver.add_cookie({"name":"SID", "value": tixcraft_sid, "domain": domain_name, "path" : "/", "secure":True})
 
             if 'ibon.com' in homepage:
                 ibonqware = config_dict["advanced"]["ibonqware"]
