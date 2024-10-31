@@ -33,7 +33,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.27)"
+CONST_APP_VERSION = "MaxBot (2024.04.28)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -1813,24 +1813,45 @@ async def nodriver_cityline_purchase_button_press(tab, config_dict):
 
     return is_button_clicked
 
-async def nodriver_cityline_close_tab(driver):
-    tmp_tab = driver.tabs[0]
+async def nodriver_get_http_tab(driver):
+    tabs = []
+    driver_info = await driver._get_targets()
+    await driver
     try:
-        html = await tmp_tab.get_content()
-        #print("get_content:", html)
-        if len(html) > 0:
-            await tmp_tab.activate()
-            await tmp_tab.close()
+        for i, each_tab in enumerate(driver):
+            target_info = each_tab.target.to_json()
+            target_url = ""
+            if target_info:
+                if "url" in target_info:
+                    target_url = target_info["url"]
+            if len(target_url) > 4:
+                if target_url[:4]=="http" or target_url == "about:blank":
+                    tabs.append(each_tab)
     except Exception as exc:
+        print(exc)
         pass
+    return tabs
+
+async def nodriver_cityline_close_tab(tabs):
+    if len(tabs) > 1:
+        tmp_tab = tabs[0]
+        try:
+            html = await tmp_tab.get_content()
+            #print("get_content:", html)
+            if len(html) > 0:
+                await tmp_tab.activate()
+                await tmp_tab.close()
+        except Exception as exc:
+            pass
 
 async def nodriver_cityline_close_second_tab(driver, current_tab, url):
-    tab_count = len(driver.tabs)
+    tabs = await nodriver_get_http_tab(driver)
+    tab_count = len(tabs)
     #print("close_second_tab tab count:", tab_count)
     if tab_count > 1:
         # wait page ready.
         time.sleep(0.3)
-        await nodriver_cityline_close_tab(driver)
+        await nodriver_cityline_close_tab(tabs)
         time.sleep(0.3)
     return current_tab
 
@@ -1845,7 +1866,7 @@ async def nodriver_cityline_main(driver, tab, url, config_dict):
         try:
             html_body = await tab.get_content()
             if html_body:
-                if len(html_body) > 10240:
+                if len(html_body) > 1024:
                     is_dom_ready = True
         except Exception as exc:
             pass
