@@ -2085,7 +2085,7 @@ async def nodriver_resize_window(driver, config_dict):
             except Exception as exc:
                 # cannot unpack non-iterable NoneType object
                 print(exc)
-                print("請關閉所有視窗後，重新操作一次")
+                #print("請關閉所有視窗後，重新操作一次")
                 pass
 
 # we only handle last tab.
