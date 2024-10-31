@@ -4,7 +4,6 @@ import asyncio
 import base64
 import json
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -42,7 +41,7 @@ CONST_FROM_BOTTOM_TO_TOP = "from bottom to top"
 CONST_CENTER = "center"
 CONST_RANDOM = "random"
 CONST_SELECT_ORDER_DEFAULT = CONST_RANDOM
-CONST_EXCLUDE_DEFAULT = "\"輪椅\",\"身障\",\"身心 障礙\",\"Restricted View\",\"燈柱遮蔽\",\"視線不完整\""
+CONST_EXCLUDE_DEFAULT = "\"輪椅\",\"身障\",\"身心 障礙\",\"Restricted View\",\"Wheelchair\",\"燈柱遮蔽\",\"視線不完整\""
 CONST_CAPTCHA_SOUND_FILENAME_DEFAULT = "ding-dong.wav"
 CONST_HOMEPAGE_DEFAULT = "about:blank"
 
@@ -166,6 +165,7 @@ def get_default_config():
 
     config_dict["advanced"]["chrome_extension"] = True
     config_dict["advanced"]["disable_adjacent_seat"] = False
+    config_dict["advanced"]["adblock"] = True
     config_dict["advanced"]["hide_some_image"] = False
     config_dict["advanced"]["block_facebook_network"] = False
 

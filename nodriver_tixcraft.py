@@ -264,11 +264,10 @@ async def nodriver_goto_homepage(driver, config_dict):
         # for like human.
         try:
             tab = await driver.get(homepage)
-            await tab.get_content()
-            time.sleep(5)
+            await driver
+            await driver.sleep(5)
         except Exception as e:
             pass
-
 
         if len(config_dict["advanced"]["kktix_account"])>0:
             if not 'https://kktix.com/users/sign_in?' in homepage:
@@ -304,31 +303,8 @@ async def nodriver_goto_homepage(driver, config_dict):
 
     try:
         tab = await driver.get(homepage)
-        await tab.get_content()
-        # to avoid error: cannot unpack non-iterable NoneType object
-        time.sleep(2)
-
-        # workaround for not able resize.
-        url, is_quit_bot, reset_act_tab = await nodriver_current_url(driver, tab)
-        if len(driver.tabs) ==2 and url=="chrome://new-tab-page/":
-            print("retry...")
-
-            for i, tab in enumerate(driver):
-                if i == 0:
-                    print("close tab:", i)
-                    await tab.close()
-
-            #print("goto:", homepage)
-            tab = await driver.get(homepage)
-
-        # workaround for hidden chrome-extension tab.
-        if len(driver.tabs) ==2:
-            if url.startswith("chrome-extension://") and url.endswith("/audio.html"):
-                print("close wrong tab...")
-                for i, tab in enumerate(driver):
-                    if i > 0:
-                        print("close tab:", i)
-                        await tab.close()
+        await driver
+        await driver.sleep(5)
     except Exception as e:
         pass
 
@@ -353,17 +329,21 @@ async def nodriver_goto_homepage(driver, config_dict):
                     cookie.value=tixcraft_sid
                     is_cookie_exist = True
                     break
+            
+            is_cookie_changed = False
             if not is_cookie_exist:
                 new_cookie = cdp.network.CookieParam("SID",tixcraft_sid, domain=domain_name, path="/", http_only=True, secure=True)
                 cookies.append(new_cookie)
+                is_cookie_changed = True
             await driver.cookies.set_all(cookies)
 
-            try:
-                for each_tab in driver.tabs:
-                    await each_tab.reload()
-            except Exception as exc:
-                print(exc)
-                pass            
+            if is_cookie_changed:
+                try:
+                    for each_tab in driver.tabs:
+                        await each_tab.reload()
+                except Exception as exc:
+                    print(exc)
+                    pass            
 
     if 'ibon.com' in homepage:
         ibonqware = config_dict["advanced"]["ibonqware"]
@@ -1102,24 +1082,8 @@ async def nodriver_tixcraft_input_check_code(tab, config_dict, fail_list, questi
 
     return fail_list
 
-async def nodriver_tixcraft_ticket_main_agree(tab, config_dict):
-    for i in range(3):
-        is_finish_checkbox_click = await nodriver_check_checkbox(tab, '#TicketForm_agree:not(:checked)')
-        if is_finish_checkbox_click:
-            break
-
 async def nodriver_tixcraft_ticket_main(tab, config_dict, ocr, Captcha_Browser, domain_name):
-    is_agree_at_webdriver = False
-    if not config_dict["browser"] in CONST_CHROME_FAMILY:
-        is_agree_at_webdriver = True
-    else:
-        if not config_dict["advanced"]["chrome_extension"]:
-            is_agree_at_webdriver = True
-    #print("is_agree_at_webdriver:", is_agree_at_webdriver)
-    if is_agree_at_webdriver:
-        # use extension instead of selenium.
-        # checkbox javascrit code at chrome extension.
-        await nodriver_tixcraft_ticket_main_agree(tab, config_dict)
+    await nodriver_check_checkbox(tab, '#TicketForm_agree:not(:checked)')
 
 async def nodriver_tixcraft_main(tab, url, config_dict, ocr, Captcha_Browser):
     global tixcraft_dict
@@ -1927,7 +1891,6 @@ async def nodriver_cityline_main(driver, tab, url, config_dict):
 
     return tab
 
-
 async def nodriver_facebook_main(tab, config_dict):
     facebook_account = config_dict["advanced"]["facebook_account"].strip()
     facebook_password = config_dict["advanced"]["facebook_password_plaintext"].strip()
@@ -1971,12 +1934,11 @@ def get_nodriver_browser_args():
         "--no-service-autorun",
         "--password-store=basic",
         "--remote-debugging-host=127.0.0.1",
-        "--lang=zh-TW",
         #"--disable-remote-fonts",
     ]
 
     return browser_args
-
+    
 def get_maxbot_extension_path(extension_folder):
     app_root = util.get_app_root()
     extension_path = "webdriver"
@@ -1995,12 +1957,11 @@ def get_maxbot_extension_path(extension_folder):
     return config_filepath
 
 def get_extension_config(config_dict):
-    default_lang = "zh-TW"
     no_sandbox=True
     browser_args = get_nodriver_browser_args()
     if len(config_dict["advanced"]["proxy_server_port"]) > 2:
         browser_args.append('--proxy-server=%s' % config_dict["advanced"]["proxy_server_port"])
-    conf = Config(browser_args=browser_args, lang=default_lang, no_sandbox=no_sandbox, headless=config_dict["advanced"]["headless"])
+    conf = Config(browser_args=browser_args, no_sandbox=no_sandbox, headless=config_dict["advanced"]["headless"])
     if config_dict["advanced"]["chrome_extension"]:
         ext = get_maxbot_extension_path(CONST_MAXBOT_EXTENSION_NAME)
         if len(ext) > 0:
@@ -2018,29 +1979,32 @@ def get_extension_config(config_dict):
     return conf
 
 async def nodrver_block_urls(tab, config_dict):
-    NETWORK_BLOCKED_URLS = [
-        '*.clarity.ms/*',
-        '*.doubleclick.net/*',
-        '*.lndata.com/*',
-        '*.rollbar.com/*',
-        '*.twitter.com/i/*',
-        '*/adblock.js',
-        '*/google_ad_block.js',
-        '*anymind360.com/*',
-        '*cdn.cookielaw.org/*',
-        '*e2elog.fetnet.net*',
-        '*fundingchoicesmessages.google.com/*',
-        '*google-analytics.*',
-        '*googlesyndication.*',
-        '*googletagmanager.*',
-        '*googletagservices.*',
-        '*img.uniicreative.com/*',
-        '*platform.twitter.com/*',
-        '*play.google.com/*',
-        '*player.youku.*',
-        '*syndication.twitter.com/*',
-        '*youtube.com/*',
-    ]
+    NETWORK_BLOCKED_URLS = []
+
+    if config_dict["advanced"]["adblock"]:
+        NETWORK_BLOCKED_URLS = [
+            '*.clarity.ms/*',
+            '*.doubleclick.net/*',
+            '*.lndata.com/*',
+            '*.rollbar.com/*',
+            '*.twitter.com/i/*',
+            '*/adblock.js',
+            '*/google_ad_block.js',
+            '*anymind360.com/*',
+            '*cdn.cookielaw.org/*',
+            '*e2elog.fetnet.net*',
+            '*fundingchoicesmessages.google.com/*',
+            '*google-analytics.*',
+            '*googlesyndication.*',
+            '*googletagmanager.*',
+            '*googletagservices.*',
+            '*img.uniicreative.com/*',
+            '*platform.twitter.com/*',
+            '*play.google.com/*',
+            '*player.youku.*',
+            '*syndication.twitter.com/*',
+            '*youtube.com/*',
+        ]
 
     if config_dict["advanced"]["hide_some_image"]:
         NETWORK_BLOCKED_URLS.append('*.woff')
@@ -2067,16 +2031,17 @@ async def nodrver_block_urls(tab, config_dict):
         NETWORK_BLOCKED_URLS.append('*facebook.com/*')
         NETWORK_BLOCKED_URLS.append('*.fbcdn.net/*')
 
-    #await tab.send(cdp.network.enable())
+    await tab.send(cdp.network.enable())
     # set_blocked_ur_ls is author's typo..., waiting author to chagne.
-    #await tab.send(cdp.network.set_blocked_ur_ls(NETWORK_BLOCKED_URLS))
+    await tab.send(cdp.network.set_blocked_ur_ls(NETWORK_BLOCKED_URLS))
     return tab
 
 async def nodriver_resize_window(driver, config_dict):
     window_size = config_dict["advanced"]["window_size"]
+    #print("window_size", window_size)
     if len(window_size) > 0:
-        #print("window_size", window_size)
         if "," in window_size:
+            print("start to resize window")
             launch_counter = 1
             target_left = 0
             target_top = 30
@@ -2095,11 +2060,7 @@ async def nodriver_resize_window(driver, config_dict):
             #tab = await driver.main_tab()
             try:
                 for i, tab in enumerate(driver):
-                    #print(i, launch_counter, target_left, target_width, target_height)
-                    if i==0:
-                        await tab.activate()
                     await tab.set_window_size(left=target_left, top=target_top, width=target_width, height=target_height)
-                    await tab.sleep()
             except Exception as exc:
                 # cannot unpack non-iterable NoneType object
                 print(exc)
@@ -2108,31 +2069,50 @@ async def nodriver_resize_window(driver, config_dict):
 
 # we only handle last tab.
 async def nodriver_current_url(driver, tab):
-    is_quit_bot = False
     exit_bot_error_strings = [
         "server rejected WebSocket connection: HTTP 500",
         "[Errno 61] Connect call failed ('127.0.0.1',",
         "[WinError 1225] ",
     ]
-
+    # return value
     url = ""
-    tab_count = len(driver.tabs)
-    #print("tab_count:", tab_count)
+    is_quit_bot = False
+    last_active_tab = None
 
-    # PS: manually close tab will cause nodriver no response.
-    if tab_count > 1:
-        tab = driver.tabs[tab_count-1]
+    driver_info = await driver._get_targets()
+    if not tab.target in driver_info:
+        print("tab may closed by user before, or popup confirm dialog.")
+        tab = None
+        await driver
+        try:
+            for i, each_tab in enumerate(driver):
+                target_info = each_tab.target.to_json()
+                target_url = ""
+                if target_info:
+                    if "url" in target_info:
+                        target_url = target_info["url"]
+                if len(target_url) > 4:
+                    if target_url[:4]=="http" or target_url == "about:blank":
+                        print("found tab url:", target_url)
+                        last_active_tab = each_tab
+        except Exception as exc:
+            print(exc)
+            if str(exc) == "list index out of range":
+                print("Browser closed, start to exit bot.")
+                is_quit_bot = True
+                tab = None
+                last_active_tab = None
 
-    reset_active_tab = None
-    if not tab in driver.tabs:
-        print("tab closed by user before.")
-        tab = driver.tabs[tab_count-1]
-        reset_active_tab = tab
+        if not last_active_tab is None:
+            tab = last_active_tab
 
     if tab:
-        url_dict = {}
         try:
-            url_dict = await tab.js_dumps('window.location.href')
+            target_info = tab.target.to_json()
+            if target_info:
+                if "url" in target_info:
+                    url = target_info["url"]
+            #url = await tab.evaluate('window.location.href')
         except Exception as exc:
             print(exc)
             str_exc = ""
@@ -2141,19 +2121,14 @@ async def nodriver_current_url(driver, tab):
             except Exception as exc2:
                 pass
             if len(str_exc) > 0:
+                if str_exc == "server rejected WebSocket connection: HTTP 404":
+                    print("目前 nodriver 還沒準備好..., 請等到沒出現這行訊息再開始使用。")
+
                 for each_error_string in exit_bot_error_strings:
                     if each_error_string in str_exc:
                         #print('quit bot by error:', each_error_string, driver)
                         is_quit_bot = True
-
-        url_array = []
-        if url_dict:
-            for k in url_dict:
-                if k.isnumeric():
-                    if "0" in url_dict[k]:
-                        url_array.append(url_dict[k]["0"])
-            url = ''.join(url_array)
-    return url, is_quit_bot, reset_active_tab
+    return url, is_quit_bot, last_active_tab
 
 def nodriver_overwrite_prefs(conf):
     #print(conf.user_data_dir)
@@ -2199,16 +2174,6 @@ def nodriver_overwrite_prefs(conf):
 
     state_filepath = os.path.join(conf.user_data_dir,"Local State")
     state_dict = {}
-    state_dict["performance_tuning"]={}
-    state_dict["performance_tuning"]["high_efficiency_mode"]={}
-    state_dict["performance_tuning"]["high_efficiency_mode"]["state"]=1
-    state_dict["browser"]={}
-    state_dict["browser"]["enabled_labs_experiments"]=[
-        "history-journeys@4",
-        "memory-saver-multi-state-mode@1",
-        "modal-memory-saver@1",
-        "read-anything@2"
-    ]
     state_dict["dns_over_https"]={}
     state_dict["dns_over_https"]["mode"]="off"
     json_str = json.dumps(state_dict)
@@ -2217,18 +2182,18 @@ def nodriver_overwrite_prefs(conf):
 
 async def check_refresh_datetime_occur(driver, target_time):
     is_refresh_datetime_sent = False
-
-    system_clock_data = datetime.now()
-    current_time = system_clock_data.strftime('%H:%M:%S')
-    if target_time == current_time:
-        try:
-            for tab in driver.tabs:
-                await tab.reload()
-                is_refresh_datetime_sent = True
-                print("send refresh at time:", current_time)
-        except Exception as exc:
-            print(exc)
-            pass
+    if len(target_time) > 0:
+        system_clock_data = datetime.now()
+        current_time = system_clock_data.strftime('%H:%M:%S')
+        if target_time == current_time:
+            try:
+                for tab in driver.tabs:
+                    await tab.reload()
+                    is_refresh_datetime_sent = True
+                    print("send refresh at time:", current_time)
+            except Exception as exc:
+                print(exc)
+                pass
 
     return is_refresh_datetime_sent
 
@@ -2372,14 +2337,9 @@ async def main(args):
     driver = None
     tab = None
     if not config_dict is None:
-        sandbox = False
         conf = get_extension_config(config_dict)
         nodriver_overwrite_prefs(conf)
-        # PS: nodrirver run twice always cause error:
-        # Failed to connect to browser
-        # One of the causes could be when you are running as root.
-        # In that case you need to pass no_sandbox=True
-        #driver = await uc.start(conf, sandbox=sandbox, headless=config_dict["advanced"]["headless"])
+        #driver = await uc.start(conf, headless=config_dict["advanced"]["headless"])
         driver = await uc.start(conf)
         if not driver is None:
             tab = await nodriver_goto_homepage(driver, config_dict)

@@ -44,10 +44,16 @@ function cityline_area_keyword(settings) {
         for (let i = 0; i < area_keyword_array.length; i++) {
             $(query_string).each(function() {
                 let html_text = $(this).text();
+                let html_string = $(this).html();
+                let is_soldout = false;
                 //console.log("html_text:"+html_text);
                 if (html_text.indexOf('售罄') > -1) {
-                    // do nothing.
-                } else {
+                    is_soldout = false;
+                }
+                if (html_string.indexOf('>Sold Out<') > -1) {
+                    is_soldout = false;
+                }
+                if (!is_soldout) {
                     if (html_text.indexOf(area_keyword_array[i]) > -1) {
                         matched_block.push($(this));
                     }
@@ -63,10 +69,16 @@ function cityline_area_keyword(settings) {
     } else {
         $(query_string).each(function() {
             let html_text = $(this).text();
+            let html_string = $(this).html();
+            let is_soldout = false;
             //console.log("html_text:"+html_text);
             if (html_text.indexOf('售罄') > -1) {
-                // do nothing.
-            } else {
+                is_soldout = false;
+            }
+            if (html_string.indexOf('>Sold Out<') > -1) {
+                is_soldout = false;
+            }
+            if (!is_soldout) {
                 matched_block.push($(this));
             }
         });
@@ -86,7 +98,7 @@ function cityline_performance() {
         const loadingoverlay = $(".loadingoverlay");
         const loading_display = loadingoverlay.css("display");
         let able_to_work = true;
-        if(loading_display && loading_display == "flex") {
+        if (loading_display && loading_display == "flex") {
             able_to_work = false;
         }
         //console.log("able_to_work:" + able_to_work);
@@ -126,7 +138,7 @@ function cityline_performance() {
                 //$('#expressPurchaseBtn').click();
                 //$('#expressPurchaseBtn').trigger( "click");
                 if (settings.webdriver_type == "nodriver") {
-                    const selector="#expressPurchaseBtn";
+                    const selector = "#expressPurchaseBtn";
                     webdriver_location_click(settings, selector, window.location.href);
                 }
             }

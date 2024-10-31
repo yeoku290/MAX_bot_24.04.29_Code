@@ -90,6 +90,7 @@
         "idle_keyword": "",
         "resume_keyword": "",
         "idle_keyword_second": "",
-        "resume_keyword_second": ""
+        "resume_keyword_second": "",
+        "adblock": false
     }
 }

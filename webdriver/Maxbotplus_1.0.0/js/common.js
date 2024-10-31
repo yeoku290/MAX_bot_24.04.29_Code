@@ -1,56 +1,37 @@
-function get_target_area_with_order(settings, matched_block)
-{
+function get_target_item_with_order(mode, matched_block) {
     //console.log(settings);
     let target_area = null;
 
-    if(matched_block.length) {
-        let last_index = matched_block.length-1
+    if (matched_block.length) {
+        let last_index = matched_block.length - 1
         let center_index = 0;
         let random_index = 0;
-        if(matched_block.length>1) {
-            center_index = parseInt(last_index/2);
-            random_index = getRandom(0,last_index)
+        if (matched_block.length > 1) {
+            center_index = parseInt(last_index / 2);
+            random_index = getRandom(0, last_index)
         }
-        if(settings.area_auto_select.mode=="from top to bottom")
+        if (mode == "from top to bottom")
             target_area = matched_block[0];
-        if(settings.area_auto_select.mode=="from bottom to top")
+        if (mode == "from bottom to top")
             target_area = matched_block[last_index];
-        if(settings.area_auto_select.mode=="center")
+        if (mode == "center")
             target_area = matched_block[center_index];
-        if(settings.area_auto_select.mode=="random")
+        if (mode == "random")
             target_area = matched_block[random_index];
     }
     return target_area;
 }
 
-function get_target_date_with_order(settings, matched_block)
-{
-    //console.log(settings);
-    let target_area = null;
-
-    if(matched_block.length) {
-        let last_index = matched_block.length-1
-        let center_index = 0;
-        let random_index = 0;
-        if(matched_block.length>1) {
-            center_index = parseInt(last_index/2);
-            random_index = getRandom(0,last_index)
-        }
-        if(settings.date_auto_select.mode=="from top to bottom")
-            target_area = matched_block[0];
-        if(settings.date_auto_select.mode=="from bottom to top")
-            target_area = matched_block[last_index];
-        if(settings.date_auto_select.mode=="center")
-            target_area = matched_block[center_index];
-        if(settings.date_auto_select.mode=="random")
-            target_area = matched_block[random_index];
-    }
-
-    return target_area;
+function get_target_area_with_order(settings, matched_block) {
+    return get_target_item_with_order(settings.area_auto_select.mode, matched_block);;
 }
 
-function getRandom(min,max){
-    return Math.floor(Math.random()*(max-min+1))+min;
+function get_target_date_with_order(settings, matched_block) {
+    return get_target_item_with_order(settings.date_auto_select.mode, matched_block);;
+
+
+function getRandom(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function get_remote_url(settings) {
@@ -68,64 +49,32 @@ function get_remote_url(settings) {
 }
 
 async function webdriver_sendkey(settings, selector, answer) {
-    let api_url = get_remote_url(settings);
-    //console.log("api_url:" + api_url);
-    if(api_url.indexOf("127.0.0.")>-1) {
-        let body = {
-            token: settings.token,
-            command: [
-            {type: 'sendkey', selector: selector, text: answer}
-        ]};
-        body = JSON.stringify(body);
-
-        let bundle = {
-            action: 'post',
-            data: {
-                'url': api_url + 'sendkey',
-                'post_data': body,
-            }
-        };
-        let bundle_string = JSON.stringify(bundle);
-        //console.log(bundle);
-        const return_answer = await chrome.runtime.sendMessage(bundle);
-        //console.log(return_answer);
-    }
+    const cmd = [{type: 'sendkey', selector: selector, text: answer}];
+    webdriver_command(settings, selector, cmd);
 }
 
 async function webdriver_location_sendkey(settings, selector, answer, location) {
-    let api_url = get_remote_url(settings);
-    //console.log("api_url:" + api_url);
-    if(api_url.indexOf("127.0.0.")>-1) {
-        let body = {
-            token: settings.token,
-            command: [
-            {type: 'sendkey', selector: selector, text: answer, location: location}
-        ]};
-        body = JSON.stringify(body);
-
-        let bundle = {
-            action: 'post',
-            data: {
-                'url': api_url + 'sendkey',
-                'post_data': body,
-            }
-        };
-        let bundle_string = JSON.stringify(bundle);
-        //console.log(bundle);
-        const return_answer = await chrome.runtime.sendMessage(bundle);
-        //console.log(return_answer);
-    }
+    const cmd = [{type: 'sendkey', selector: selector, text: answer, location: location}];
+    webdriver_location_command(settings, selector, location, cmd);
 }
 
 async function webdriver_click(settings, selector) {
+    const cmd = [{type: 'click', selector: selector}];
+    webdriver_command(settings, selector, cmd);
+}
+
+async function webdriver_location_click(settings, selector, location) {
+    const cmd = [{type: 'click', selector: selector, location: location}];
+    webdriver_location_command(settings, selector, location, cmd);
+}
+
+async function webdriver_command(settings, selector, command) {
     let api_url = get_remote_url(settings);
     //console.log("api_url:" + api_url);
     if(api_url.indexOf("127.0.0.")>-1) {
         let body = {
             token: settings.token,
-            command: [
-            {type: 'click', selector: selector}
-        ]};
+            command: command};
         body = JSON.stringify(body);
 
         let bundle = {
@@ -142,15 +91,13 @@ async function webdriver_click(settings, selector) {
     }
 }
 
-async function webdriver_location_click(settings, selector, location) {
+async function webdriver_location_command(settings, selector, location, command) {
     let api_url = get_remote_url(settings);
     //console.log("api_url:" + api_url);
     if(api_url.indexOf("127.0.0.")>-1) {
         let body = {
             token: settings.token,
-            command: [
-            {type: 'click', selector: selector, location: location}
-        ]};
+            command: command};
         body = JSON.stringify(body);
 
         let bundle = {
@@ -215,4 +162,8 @@ async function webdriver_location_eval(settings, text, location) {
         const return_answer = await chrome.runtime.sendMessage(bundle);
         //console.log(return_answer);
     }
+}
+
+function playsound(){
+    chrome.runtime.sendMessage({action: 'playsound'});
 }

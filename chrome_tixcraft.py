@@ -718,29 +718,32 @@ def get_driver_by_config(config_dict):
         print("create web driver object fail @_@;")
     else:
         try:
-            NETWORK_BLOCKED_URLS = [
-                '*.clarity.ms/*',
-                '*.doubleclick.net/*',
-                '*.lndata.com/*',
-                '*.rollbar.com/*',
-                '*.twitter.com/i/*',
-                '*/adblock.js',
-                '*/google_ad_block.js',
-                '*anymind360.com/*',
-                '*cdn.cookielaw.org/*',
-                '*e2elog.fetnet.net*',
-                '*fundingchoicesmessages.google.com/*',
-                '*google-analytics.*',
-                '*googlesyndication.*',
-                '*googletagmanager.*',
-                '*googletagservices.*',
-                '*img.uniicreative.com/*',
-                '*platform.twitter.com/*',
-                '*play.google.com/*',
-                '*player.youku.*',
-                '*syndication.twitter.com/*',
-                '*youtube.com/*',
-            ]
+            NETWORK_BLOCKED_URLS = []
+
+            if config_dict["advanced"]["adblock"]:
+                NETWORK_BLOCKED_URLS = [
+                    '*.clarity.ms/*',
+                    '*.doubleclick.net/*',
+                    '*.lndata.com/*',
+                    '*.rollbar.com/*',
+                    '*.twitter.com/i/*',
+                    '*/adblock.js',
+                    '*/google_ad_block.js',
+                    '*anymind360.com/*',
+                    '*cdn.cookielaw.org/*',
+                    '*e2elog.fetnet.net*',
+                    '*fundingchoicesmessages.google.com/*',
+                    '*google-analytics.*',
+                    '*googlesyndication.*',
+                    '*googletagmanager.*',
+                    '*googletagservices.*',
+                    '*img.uniicreative.com/*',
+                    '*platform.twitter.com/*',
+                    '*play.google.com/*',
+                    '*player.youku.*',
+                    '*syndication.twitter.com/*',
+                    '*youtube.com/*',
+                ]
 
             if config_dict["advanced"]["hide_some_image"]:
                 NETWORK_BLOCKED_URLS.append('*.woff')
@@ -2151,14 +2154,6 @@ def tixcraft_auto_ocr(driver, ocr, away_from_keyboard_enable, previous_answer, C
 
     return is_need_redo_ocr, previous_answer, is_form_sumbited
 
-def tixcraft_ticket_main_agree(driver, config_dict):
-    is_finish_checkbox_click = False
-    for i in range(3):
-        is_finish_checkbox_click = check_checkbox(driver, By.CSS_SELECTOR, '#TicketForm_agree')
-        if is_finish_checkbox_click:
-            break
-    return is_finish_checkbox_click
-
 def get_tixcraft_ticket_select_by_keyword(driver, config_dict, area_keyword_item):
     show_debug_message = True       # debug.
     show_debug_message = False      # online
@@ -2336,19 +2331,9 @@ def tixcraft_assign_ticket_number(driver, config_dict):
 
 
 def tixcraft_ticket_main(driver, config_dict, ocr, Captcha_Browser, domain_name):
-    is_agree_at_webdriver = False
-    if not config_dict["browser"] in CONST_CHROME_FAMILY:
-        is_agree_at_webdriver = True
-    else:
-        if not config_dict["advanced"]["chrome_extension"]:
-            is_agree_at_webdriver = True
-    if is_agree_at_webdriver:
-        # use extension instead of selenium.
-        # checkbox javascrit code at chrome extension.
-        tixcraft_ticket_main_agree(driver, config_dict)
+    check_checkbox(driver, By.CSS_SELECTOR, '#TicketForm_agree:not(:checked)')
 
     is_ticket_number_assigned = False
-
     # PS: some events on tixcraft have multi <select>.
     is_ticket_number_assigned, select_obj = tixcraft_assign_ticket_number(driver, config_dict)
 
@@ -5904,10 +5889,7 @@ def ticketmaster_captcha(driver, config_dict, ocr, Captcha_Browser, domain_name)
         away_from_keyboard_enable = False
     ocr_captcha_image_source = config_dict["ocr_captcha"]["image_source"]
 
-    for i in range(2):
-        is_finish_checkbox_click = check_checkbox(driver, By.CSS_SELECTOR, '#TicketForm_agree')
-        if is_finish_checkbox_click:
-            break
+    check_checkbox(driver, By.CSS_SELECTOR, '#TicketForm_agree:not(:checked)')
 
     if not config_dict["ocr_captcha"]["enable"]:
         tixcraft_keyin_captcha_code(driver)

@@ -15,6 +15,7 @@
         "type": "module"
     },
     "permissions": [
+        "offscreen",
         "storage",
         "declarativeNetRequest",
         "declarativeNetRequestFeedback"
@@ -26,7 +27,8 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "data/*.json"
+                "data/*.json",
+                "mp3/notification.mp3"
             ],
             "extension_ids": [
                 "*"

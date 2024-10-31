@@ -37,6 +37,7 @@ const window_size = document.querySelector('#window_size');
 const chrome_extension = document.querySelector('#chrome_extension');
 const disable_adjacent_seat = document.querySelector('#disable_adjacent_seat');
 
+const adlbock = document.querySelector('#adlbock');
 const hide_some_image = document.querySelector('#hide_some_image');
 const block_facebook_network = document.querySelector('#block_facebook_network');
 const headless = document.querySelector('#headless');
@@ -132,6 +133,7 @@ function load_settins_to_form(settings) {
         chrome_extension.checked = settings.advanced.chrome_extension;
         disable_adjacent_seat.checked = settings.advanced.disable_adjacent_seat;
 
+        adblock.checked = settings.advanced.adblock;
         hide_some_image.checked = settings.advanced.hide_some_image;
         block_facebook_network.checked = settings.advanced.block_facebook_network;
         headless.checked = settings.advanced.headless;
@@ -366,6 +368,7 @@ function save_changes_to_dict(silent_flag) {
             settings.advanced.chrome_extension = chrome_extension.checked;
             settings.advanced.disable_adjacent_seat = disable_adjacent_seat.checked;
 
+            settings.advanced.adblock = adblock.checked;
             settings.advanced.hide_some_image = hide_some_image.checked;
             settings.advanced.block_facebook_network = block_facebook_network.checked;
             settings.advanced.headless = headless.checked;
