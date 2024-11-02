@@ -72,7 +72,7 @@ function gameList_keyword(date_keyword_array, date_order_mode) {
         let link = target_date.parent().find(button_tag).attr("data-href");
         if (link) {
             //console.log("link: " + link);
-            if (link.length > 0 && link.indexOf('/area/') > -1) {
+            if (link.length > 0 && link.indexOf('/') > -1) {
                 clearInterval(gameInterval);
                 window.location.href = link;
             }

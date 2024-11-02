@@ -89,7 +89,7 @@ function tixcraft_area_list_keyword(area_keyword_array, area_order_mode) {
                 let new_url = areaUrlList[link_id];
                 if (new_url) {
                     //console.log("link: " + link);
-                    if (new_url.length > 0 && new_url.indexOf('http') > -1) {
+                    if (new_url.length > 0 && new_url.indexOf('/') > -1) {
                         clearInterval(areaInterval);
                         window.location.href = new_url;
                     }
