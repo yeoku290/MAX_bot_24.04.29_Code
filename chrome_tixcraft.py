@@ -43,7 +43,7 @@ except Exception as exc:
     print(exc)
     pass
 
-CONST_APP_VERSION = "MaxBot (2024.04.28)"
+CONST_APP_VERSION = "MaxBot (2024.04.29)"
 
 CONST_MAXBOT_ANSWER_ONLINE_FILE = "MAXBOT_ONLINE_ANSWER.txt"
 CONST_MAXBOT_CONFIG_FILE = "settings.json"
@@ -834,6 +834,7 @@ def get_driver_by_config(config_dict):
                     driver.delete_cookie("SID")
                     domain_name = homepage.split('/')[2]
                     driver.add_cookie({"name":"SID", "value": tixcraft_sid, "domain": domain_name, "path" : "/", "secure":True})
+                    driver.refresh()
 
             if 'ibon.com' in homepage:
                 ibonqware = config_dict["advanced"]["ibonqware"]
@@ -5944,7 +5945,7 @@ def tixcraft_main(driver, url, config_dict, ocr, Captcha_Browser):
 
     # for event soldout or abnormal, url should redirect to user's homepage.
     if 'https://tixcraft.com/' == url or 'https://tixcraft.com/activity' == url:
-        if "/activity/game/" in config_dict["homepage"]:
+        if "/activity/game/" in config_dict["homepage"] or "/activity/detail/" in config_dict["homepage"]:
             try:
                 driver.get(config_dict["homepage"])
             except Exception as e:

@@ -7,15 +7,112 @@ $('input[type=checkbox]').each(function() {
 $("img[style='width: 100%; padding: 0;']").remove();
 $("footer").remove();
 
-function tixcraft_ticket_clean_exclude(settings) {
-    let exclude_keyword_array = [];
-    if (settings) {
-        if (settings.keyword_exclude.length > 0) {
-            if (settings.keyword_exclude != '""') {
-                exclude_keyword_array = JSON.parse('[' + settings.keyword_exclude + ']');
+var ticketmaster_ocr_interval = null;
+var ticketmaster_ocr_config = {
+    captcha_length: 4,
+    captcha_selector: "#TicketForm_verifyCode-image",
+    captcha_renew_selector: "#TicketForm_verifyCode-image",
+    input_selector: "#TicketForm_verifyCode",
+    submit_selector: "button[type='submit']"
+};
+
+function get_ticketmaster_ocr_image() {
+    // due to multi format
+    let captcha_selector = ticketmaster_ocr_config.captcha_selector;
+
+    let image_data = "";
+    //console.log(captcha_selector);
+    let img = document.querySelector(captcha_selector);
+    if (img != null) {
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
+        canvas.height = img.naturalHeight;
+        canvas.width = img.naturalWidth;
+        context.drawImage(img, 0, 0);
+        let img_data = canvas.toDataURL();
+        if (img_data) {
+            image_data = img_data.split(",")[1];
+            //console.log(image_data);
+        }
+    } else {
+        // console.log("img not found:" + tzuchi_ocr_config.captcha_selector);
+    }
+    return image_data;
+}
+
+var last_ticketmaster_captcha_answer = "";
+chrome.runtime.onMessage.addListener((message) => {
+    let captcha_renew_selector = ticketmaster_ocr_config.captcha_renew_selector;
+
+    //console.log('sent from background', message);
+    if (message && message.hasOwnProperty("answer")) {
+        let is_valid_anwser = false;
+        if (message.answer.length == ticketmaster_ocr_config.captcha_length) {
+            is_valid_anwser = true;
+        }
+        //console.log(is_valid_anwser);
+        if (is_valid_anwser) {
+            ticketmaster_set_ocr_answer(message.answer);
+            last_ticketmaster_captcha_answer = message.answer;
+        } else {
+            // renew captcha.
+            if (last_ticketmaster_captcha_answer != message.answer) {
+                last_ticketmaster_captcha_answer = message.answer;
+                console.log("renew captcha: " + captcha_renew_selector);
+                if ($(captcha_renew_selector).length) {
+                    $(captcha_renew_selector).click();
+                }
+                ticketmaster_ticket_main();
             }
         }
     }
+});
+
+function checkall() {
+    $('input[type=checkbox]:not(:checked)').each(function() {
+        $(this).click();
+    });
+}
+
+function ticketmaster_set_ocr_answer(answer) {
+    let input_selector = ticketmaster_ocr_config.input_selector;
+    let submit_selector = ticketmaster_ocr_config.submit_selector;
+    //console.log("answer:"+answer);
+    if (answer.length > 0) {
+        let sendkey_by_webdriver = false;
+        if (settings) {
+            if (settings.hasOwnProperty("token")) {
+                sendkey_by_webdriver = true;
+            }
+        }
+        checkall();
+        //console.log("sendkey_by_webdriver:"+sendkey_by_webdriver);
+        if (!sendkey_by_webdriver) {
+            // solution #1: javascript.
+            $(input_selector).val(answer);
+            $(submit_selector).click();
+        } else {
+            // solution #2: click webdriver.
+            webdriver_location_sendkey(settings, input_selector, answer, document.location.href);
+            //webdriver_location_click(settings, submit_selector, document.location.href);
+            $(input_selector).val(answer);
+            $(submit_selector).click();
+        }
+    }
+}
+
+async function ticketmaster_get_ocr_answer(api_url, image_data) {
+    let bundle = {
+        action: 'ocr',
+        data: {
+            'url': api_url + 'ocr',
+            'image_data': image_data,
+        }
+    };
+    const return_answer = await chrome.runtime.sendMessage(bundle);
+}
+
+function ticketmaster_ticketPriceList_clean_exclude(exclude_keyword_array) {
     for (let i = 0; i < exclude_keyword_array.length; i++) {
         $("#ticketPriceList > tbody > tr").each(function() {
             let html_text = $(this).text();
@@ -27,16 +124,8 @@ function tixcraft_ticket_clean_exclude(settings) {
     }
 }
 
-function tixcraft_assign_ticket_number(settings) {
-    let area_keyword_array = [];
-    if (settings) {
-        if (settings.area_auto_select.area_keyword.length > 0) {
-            if (settings.area_auto_select.area_keyword != '""') {
-                area_keyword_array = JSON.parse('[' + settings.area_auto_select.area_keyword + ']');
-            }
-        }
-    }
-    //let target_area = [];
+function ticketmaster_ticketPriceList_ticket_number(price_keyword_array, ticket_number) {
+    let is_ticket_number_assign = false;
 
     let target_row = null;
     let all_row = $("#ticketPriceList > tbody > tr");
@@ -45,23 +134,16 @@ function tixcraft_assign_ticket_number(settings) {
             // single select.
             target_row = all_row;
         } else {
-            // single select.
+            // multi select.
             all_row.each(function() {
-                //console.log(all_row.index(this));
                 let is_match_keyword = false;
-                if (area_keyword_array.length) {
+                if (price_keyword_array.length) {
                     let html_text = $(this).text();
-                    //console.log("html:"+html_text);
-
-                    // TOOD: multi item matched, need sort.
-                    for (let i = 0; i < area_keyword_array.length; i++) {
-                        // target_area = get_target_area_with_order(settings, matched_block);
-                        console.log("area_keyword:" + area_keyword_array[i]);
-
-                        if (area_keyword_array[i].indexOf(" ") > -1) {
+                    for (let i = 0; i < price_keyword_array.length; i++) {
+                        if (price_keyword_array[i].indexOf(" ") > -1) {
                             // TODO: muti keywords with AND logic.
                         } else {
-                            if (html_text.indexOf(area_keyword_array[i]) > -1) {
+                            if (html_text.indexOf(price_keyword_array[i]) > -1) {
                                 is_match_keyword = true;
                                 target_row = $(this);
                                 break;
@@ -83,10 +165,11 @@ function tixcraft_assign_ticket_number(settings) {
 
         let ticket_options = target_row.find("option");
         if (ticket_options.length) {
-            let is_ticket_number_assign = false;
-            if (settings.ticket_number > 0) {
+            const first_option = ticket_options.first();
+
+            if (ticket_number > 0 && first_option.prop('selected') && first_option.prop('value') == '0') {
                 ticket_options.each(function() {
-                    if ($(this).val() == settings.ticket_number) {
+                    if ($(this).val() == ticket_number) {
                         $(this).prop('selected', true);
                         is_ticket_number_assign = true;
                         return false;
@@ -98,136 +181,65 @@ function tixcraft_assign_ticket_number(settings) {
             }
         }
     }
+    return is_ticket_number_assign;
 }
 
-var myInterval = null;
-
-function get_ocr_image() {
-    //console.log("get_ocr_image");
-    let image_data = "";
-
-    // PS: tixcraft have different domain to use the same content script.
-    const currentUrl = window.location.href;
-    const domain = currentUrl.split('/')[2];
-
-    let image_id = 'TicketForm_verifyCode-image';
-    let img = document.getElementById(image_id);
-    if (img != null) {
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
-        canvas.height = img.naturalHeight;
-        canvas.width = img.naturalWidth;
-        context.drawImage(img, 0, 0);
-        let img_data = canvas.toDataURL();
-        if (img_data) {
-            image_data = img_data.split(",")[1];
-            //console.log(image_data);
-        }
-    }
-    return image_data;
-}
-
-var last_captcha_answer = "";
-chrome.runtime.onMessage.addListener((message) => {
-    //console.log('sent from background', message);
-    if (message.hasOwnProperty("answer")) {
-        if (message.answer.length == 4) {
-            tixcraft_set_ocr_answer(message.answer);
-            last_captcha_answer = message.answer;
-        } else {
-            // renew captcha.
-            if (last_captcha_answer != message.answer) {
-                last_captcha_answer = message.answer;
-                console.log("renew captcha");
-                $('#TicketForm_verifyCode').click();
-            }
-        }
-    }
-});
-
-function tixcraft_set_ocr_answer(answer) {
-    //console.log("answer:"+answer);
-    if (answer.length > 0) {
-        $('#TicketForm_verifyCode').val(answer);
-        checkall();
-        $("button[type='submit']").click();
-    }
-}
-
-async function tixcraft_get_ocr_answer(api_url, image_data) {
-    let bundle = {
-        action: 'ocr',
-        data: {
-            'url': api_url + 'ocr',
-            'image_data': image_data,
-        }
-    };
-
-    const return_answer = await chrome.runtime.sendMessage(bundle);
-    //console.log(return_answer);
-
-    // fail due to CORS error
-    //ocr(bundle.data.url, bundle.data.image_data, bundle.data.callback);
-}
-
-function tixcraft_orc_image_ready(api_url) {
+function ticketmaster_orc_image_ready(api_url) {
     let ret = false;
-    let image_data = get_ocr_image();
+    let image_data = get_ticketmaster_ocr_image();
     if (image_data.length > 0) {
         ret = true;
-        if (myInterval) clearInterval(myInterval);
-        tixcraft_get_ocr_answer(api_url, image_data);
+        if (ticketmaster_ocr_interval) clearInterval(ticketmaster_ocr_interval);
+        ticketmaster_get_ocr_answer(api_url, image_data);
     }
     //console.log("orc_image_ready:"+ret);
     return ret;
 }
 
+function ticketmaster_ticket_main() {
+    let remote_url_string = get_remote_url(settings);
+    ticketmaster_ocr_interval = setInterval(() => {
+        storage.get('status', function(items) {
+            if (items.status && items.status == 'ON') {
+                ticketmaster_orc_image_ready(remote_url_string);
+            } else {
+                console.log('ddddext status is not OFF');
+            }
+        });
+    }, 100);
+}
+
 storage.get('settings', function(items) {
     if (items.settings) {
         settings = items.settings;
-    } else {
-        console.log('no settings found');
+
+        tixcraft_ticket_clean_exclude(settings);
+        tixcraft_assign_ticket_number(settings);
+        ticketmaster_ticket_main();
     }
 });
 
-function get_remote_url(settings) {
-    let remote_url_string = "";
+function tixcraft_ticket_clean_exclude(settings) {
+    let exclude_keyword_array = [];
     if (settings) {
-        let remote_url_array = [];
-        if (settings.advanced.remote_url.length > 0) {
-            remote_url_array = JSON.parse('[' + settings.advanced.remote_url + ']');
-        }
-        if (remote_url_array.length) {
-            remote_url_string = remote_url_array[0];
-        }
-    }
-    return remote_url_string;
-}
-
-function checkall() {
-    $('input[type=checkbox]:not(:checked)').each(function() {
-        $(this).click();
-    });
-}
-
-storage.get('status', function(items) {
-    if (items.status && items.status == 'ON') {
-        tixcraft_ticket_clean_exclude(settings);
-
-        //console.log("ticket_number:"+ settings.ticket_number);
-        tixcraft_assign_ticket_number(settings);
-
-        // ocr
-        if (settings.ocr_captcha.enable) {
-            let remote_url_string = get_remote_url(settings);
-            if (!tixcraft_orc_image_ready(remote_url_string)) {
-                myInterval = setInterval(() => {
-                    tixcraft_orc_image_ready(remote_url_string);
-                }, 100);
+        if (settings.keyword_exclude.length > 0) {
+            if (settings.keyword_exclude != '""') {
+                exclude_keyword_array = JSON.parse('[' + settings.keyword_exclude + ']');
             }
         }
-
-    } else {
-        console.log('no status found');
     }
-});
+    ticketmaster_ticketPriceList_clean_exclude(exclude_keyword_array);
+}
+
+function tixcraft_assign_ticket_number(settings) {
+    let price_keyword_array = [];
+    if (settings) {
+        if (settings.area_auto_select.area_keyword.length > 0) {
+            if (settings.area_auto_select.area_keyword != '""') {
+                price_keyword_array = JSON.parse('[' + settings.area_auto_select.area_keyword + ']');
+            }
+        }
+    }
+
+    return ticketmaster_ticketPriceList_ticket_number(price_keyword_array, settings.ticket_number)
+}

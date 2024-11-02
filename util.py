@@ -1397,6 +1397,14 @@ def guess_tixcraft_question(driver, question_text):
                 if '同意' in formated_html_text:
                     inferred_answer_string = 'YES'
 
+    # 輸入yes表示我同意以上文字
+    if inferred_answer_string is None:
+        if '輸入yes' in formated_html_text:
+            if '表示' in formated_html_text or '代表' in formated_html_text:
+                if '同意' in formated_html_text:
+                    if '我' in formated_html_text or '您' in formated_html_text or '你' in formated_html_text:
+                        inferred_answer_string = 'yes'
+
     # 購票前請詳閱注意事項，並於驗證碼欄位輸入【同意】繼續購票流程。
     if inferred_answer_string is None:
         if '驗證碼' in formated_html_text or '驗證欄位' in formated_html_text:

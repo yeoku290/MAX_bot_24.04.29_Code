@@ -1103,7 +1103,7 @@ async def nodriver_tixcraft_main(tab, url, config_dict, ocr, Captcha_Browser):
 
     # for event soldout or abnormal, url should redirect to user's homepage.
     if 'https://tixcraft.com/' == url or 'https://tixcraft.com/activity' == url:
-        if "/activity/game/" in config_dict["homepage"]:
+        if "/activity/game/" in config_dict["homepage"] or "/activity/detail/" in config_dict["homepage"]:
             try:
                 await tab.get(config_dict["homepage"])
             except Exception as e:
